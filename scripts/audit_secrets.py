@@ -33,10 +33,29 @@ PATTERNS: list[tuple[str, re.Pattern]] = [
 ]
 
 # Files whose whole purpose is to describe the shape of a secret, not hold one.
-ALLOWLIST_FILES = {".env.example", "scripts/audit_secrets.py"}
+ALLOWLIST_FILES = {
+    ".env.example",
+    "scripts/audit_secrets.py",
+    "scripts/scan_github_account.py",
+    "scripts/triage_findings.py",
+}
 
 # Hex-looking strings that are demonstrably not secrets.
 FALSE_POSITIVE = re.compile(r"^(0+|f+|deadbeef.*)$", re.IGNORECASE)
+
+# "Put your own value here" — a scanner that flags these trains you to ignore it,
+# and the one real key then hides in the noise.
+PLACEHOLDER = re.compile(
+    r"(?i)\byour[-_ ]?\w*[-_ ]?(key|token|secret|password|id|here)\b"
+    r"|<[^>]{2,40}>"
+    r"|\b(xxx+|yyy+|abc123|changeme|placeholder|example|sample|dummy|redacted|"
+    r"insert|replace|todo|fixme|test[-_]?key|fake|password|postgres|clawdagent)\b"
+    r"|\.\.\.")
+
+# Values read from somewhere else rather than written down.
+REFERENCE = re.compile(
+    r"\$\{[^}]+\}|\$[A-Z_][A-Z0-9_]*|%[A-Z_]+%|os\.(environ|getenv)|"
+    r"process\.env|System\.getenv|secrets\.|vars\.")
 
 BINARY_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".pdf",
                    ".woff", ".woff2", ".ttf", ".zip", ".gz"}
@@ -71,6 +90,8 @@ def scan() -> tuple[list[str], int]:
         scanned += 1
 
         for line_no, line in enumerate(text.splitlines(), 1):
+            if PLACEHOLDER.search(line) or REFERENCE.search(line):
+                continue
             for label, pattern in PATTERNS:
                 for match in pattern.finditer(line):
                     value = match.group(0)
