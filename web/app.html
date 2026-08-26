@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מעבדת תיקון</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --paper:#FFFFFF; --surface:#FFFFFF; --surface-2:#F5F7FA; --sunken:#F0F3F8;
+    --ink:#0A1422; --ink-2:#37455C; --ink-3:#5C6B80;
+    --rule:#E6EBF2; --rule-2:#F0F3F8;
+    --accent:#0B57D0; --accent-2:#3B82F6; --accent-soft:#EBF2FE;
+    --safe:#0E7C66; --safe-soft:#E6F4F0;
+    --warn:#9A5B08; --warn-soft:#FDF3E3;
+    --stop:#B93028; --stop-soft:#FDECEA;
+    --gold:#B0790E;
+    --f:"Assistant","Segoe UI",system-ui,sans-serif;
+    --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+    --shadow:0 1px 2px rgba(12,22,38,.04), 0 8px 24px -12px rgba(12,22,38,.10);
+    --cell-bg:#F0F4FA;
+    /* Receptor dots are drawn unlit, so on a pale membrane they must be darker
+       than its shaded side or they read as white specks rather than proteins. */
+    --gl-membrane:#dbe5f2; --gl-rim:#0B57D0; --gl-bare:#7A8CA6;
+    --gl-sens:#0B57D0; --gl-cross:#C87F04; --gl-allergen:#0A7D63; --gl-granule:#C2431F;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#0A0F18; --surface:#101724; --surface-2:#16202F; --sunken:#0C1220;
+      --ink:#F6F9FC; --ink-2:#D2DCE8; --ink-3:#A2B0C2;
+      --rule:#1E2938; --rule-2:#182231;
+      --accent:#7FB4FF; --accent-2:#A5CCFF; --accent-soft:#13233C;
+      --safe:#4FD0AD; --safe-soft:#0F2A24;
+      --warn:#E7B160; --warn-soft:#2A2113;
+      --stop:#FF8880; --stop-soft:#2E1614;
+      --gold:#E5B84B;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.55);
+      --cell-bg:#0C1220;
+      --gl-membrane:#17223a; --gl-rim:#4d8ff0; --gl-bare:#4a5a76;
+      --gl-sens:#7FB4FF; --gl-cross:#F5C851; --gl-allergen:#48E5BC; --gl-granule:#FF9470;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0A0F18; --surface:#101724; --surface-2:#16202F; --sunken:#0C1220;
+    --ink:#F6F9FC; --ink-2:#D2DCE8; --ink-3:#A2B0C2;
+    --rule:#1E2938; --rule-2:#182231;
+    --accent:#7FB4FF; --accent-2:#A5CCFF; --accent-soft:#13233C;
+    --safe:#4FD0AD; --safe-soft:#0F2A24;
+    --warn:#E7B160; --warn-soft:#2A2113;
+    --stop:#FF8880; --stop-soft:#2E1614;
+    --gold:#E5B84B;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.55);
+    --cell-bg:#0C1220;
+    --gl-membrane:#17223a; --gl-rim:#4d8ff0; --gl-bare:#4a5a76;
+    --gl-sens:#7FB4FF; --gl-cross:#F5C851; --gl-allergen:#48E5BC; --gl-granule:#FF9470;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    background:var(--paper);color:var(--ink);font-family:var(--f);
+    font-size:15px;line-height:1.65;font-weight:400;
+    -webkit-font-smoothing:antialiased;min-height:100vh;
+  }
+  ::selection{background:var(--accent-soft);color:var(--accent);}
+
+  /* ---------- shell ---------- */
+  .topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--rule);}
+  .topbar-in{max-width:1340px;margin-inline:auto;padding:.85rem clamp(1rem,3vw,2rem) .4rem;display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;}
+  .brand{display:flex;align-items:baseline;gap:.55rem;margin-inline-end:auto;}
+  .brand h1{font-size:1.15rem;font-weight:700;letter-spacing:-.02em;line-height:1;}
+  .brand .sub{font-size:.74rem;color:var(--ink-3);font-weight:400;}
+  .status{display:flex;gap:.4rem;flex-wrap:wrap;}
+  .pill{font-family:var(--f-mono);font-size:.67rem;font-weight:500;padding:.3em .65em;border-radius:100px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap;}
+  .pill.on{background:var(--safe-soft);color:var(--safe);}
+  .pill.off{background:var(--warn-soft);color:var(--warn);}
+
+  nav{max-width:1340px;margin-inline:auto;padding:0 clamp(1rem,3vw,2rem);display:flex;gap:.1rem;overflow-x:auto;scrollbar-width:none;}
+  nav::-webkit-scrollbar{display:none;}
+  nav button{font-family:var(--f);font-size:.88rem;font-weight:600;color:var(--ink-3);background:none;border:0;border-bottom:2px solid transparent;padding:.55rem .8rem .7rem;cursor:pointer;white-space:nowrap;transition:color .15s;}
+  nav button:hover{color:var(--ink-2);}
+  nav button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);}
+  nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-4px;border-radius:4px;}
+
+  main{max-width:1340px;margin-inline:auto;padding:1.4rem clamp(1rem,3vw,2rem) 5rem;}
+  .panel[hidden]{display:none;}
+
+  .cols{display:grid;gap:1.1rem;grid-template-columns:minmax(0,20rem) minmax(0,1fr);align-items:start;}
+  .stack{display:flex;flex-direction:column;gap:1.1rem;min-width:0;}
+  /* Collapsed to one column the two stacks would run end to end, putting the
+     whole treatment panel between the patient and the cell. `display:contents`
+     dissolves them so the cards interleave by their own order instead. The same
+     order values also give the right sequence inside each stack on desktop. */
+  @media (max-width:1000px){
+    .cols{grid-template-columns:1fr;}
+    .cols > .stack{display:contents;}
+  }
+
+  .card{background:var(--surface);border-radius:14px;padding:1.3rem 1.4rem 1.45rem;box-shadow:var(--shadow);}
+  .card > h2{font-size:1rem;font-weight:700;letter-spacing:-.01em;margin-bottom:.2rem;}
+  .card > .hint{color:var(--ink-2);font-size:.82rem;line-height:1.6;margin-bottom:1.1rem;font-weight:400;}
+  .card > .hint:last-child{margin-bottom:0;}
+
+  /* ---------- controls ---------- */
+  .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:1.2rem;}
+  .chip{font-family:var(--f);font-size:.79rem;font-weight:600;padding:.34em .8em;border-radius:100px;cursor:pointer;background:var(--surface-2);color:var(--ink-2);border:0;transition:background .15s,color .15s;}
+  .chip:hover{background:var(--rule);}
+  .chip[aria-pressed="true"]{background:var(--accent);color:#fff;}
+  .chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .field{margin-bottom:1.15rem;}
+  .field:last-child{margin-bottom:0;}
+  .field-top{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;margin-bottom:.35rem;}
+  .field-top label{font-size:.83rem;font-weight:600;color:var(--ink-2);}
+  .field-top .val{font-family:var(--f-mono);font-size:.84rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--accent);direction:ltr;}
+  .field .sub{font-size:.74rem;color:var(--ink-2);margin-top:.35rem;line-height:1.55;font-weight:400;}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;cursor:pointer;direction:ltr;display:block;}
+  input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:3px;background:var(--rule);}
+  input[type=range]::-moz-range-track{height:3px;border-radius:3px;background:var(--rule);}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);margin-top:-5.5px;border:0;transition:transform .12s;}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:0;}
+  input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.18);}
+  input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:5px;border-radius:6px;}
+  input[type=range]:disabled{opacity:.35;cursor:not-allowed;}
+
+  input[type=text],textarea,select{font-family:var(--f);font-size:.87rem;color:var(--ink);background:var(--surface-2);border:1px solid transparent;border-radius:9px;padding:.5rem .7rem;width:100%;}
+  textarea{resize:vertical;min-height:4.8rem;line-height:1.6;}
+  input[type=text]:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);background:var(--surface);}
+  label.inline{display:flex;align-items:center;gap:.5rem;font-size:.83rem;font-weight:600;color:var(--ink-2);cursor:pointer;}
+  input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex:none;}
+
+  button.btn{font-family:var(--f);font-size:.86rem;font-weight:700;cursor:pointer;padding:.52rem 1.1rem;border-radius:9px;border:0;background:var(--accent);color:#fff;transition:opacity .15s;}
+  button.btn:hover{opacity:.88;}
+  button.btn.ghost{background:var(--accent-soft);color:var(--accent);}
+  button.btn.quiet{background:var(--surface-2);color:var(--ink-2);}
+  button.btn:disabled{opacity:.4;cursor:not-allowed;}
+  button.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .row{display:flex;gap:.55rem;flex-wrap:wrap;align-items:center;}
+
+  /* ---------- 3D cell ---------- */
+  .cell-wrap{position:relative;border-radius:12px;overflow:hidden;background:var(--cell-bg);}
+  #cell-canvas{display:block;width:100%;height:clamp(280px,42vh,440px);cursor:grab;}
+  #cell-canvas:active{cursor:grabbing;}
+  .cell-hud{position:absolute;inset-inline-start:0;top:0;padding:.85rem 1rem;pointer-events:none;}
+  .cell-hud .big{font-family:var(--f-mono);font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;direction:ltr;}
+  .cell-hud .cap{font-size:.7rem;color:var(--ink-2);margin-top:.2rem;font-weight:400;}
+  .cell-hint{position:absolute;inset-inline-end:0;bottom:0;padding:.7rem .95rem;font-size:.7rem;color:var(--ink-3);pointer-events:none;font-weight:400;}
+  .cell-fallback{padding:2.5rem 1.5rem;text-align:center;color:var(--ink-3);font-size:.86rem;}
+  .legend3d{display:flex;flex-wrap:wrap;gap:.4rem .95rem;margin-top:.85rem;}
+  .legend3d span{display:inline-flex;align-items:center;gap:.4rem;font-size:.76rem;color:var(--ink-2);}
+  .legend3d i{width:9px;height:9px;border-radius:50%;flex:none;}
+  .narrative{margin-top:.9rem;padding:.85rem 1rem;background:var(--surface-2);border-radius:10px;font-size:.85rem;line-height:1.65;color:var(--ink-2);}
+  .narrative b{color:var(--ink);font-weight:600;}
+
+  /* ---------- verdict ---------- */
+  .verdict{border-radius:12px;padding:1.05rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+  .verdict .word{font-size:1.35rem;font-weight:700;line-height:1.15;letter-spacing:-.01em;}
+  .verdict .why{font-size:.82rem;opacity:.85;margin-top:.15rem;font-weight:400;}
+  .verdict .score{font-family:var(--f-mono);font-size:2rem;font-weight:600;font-variant-numeric:tabular-nums;direction:ltr;line-height:1;}
+  .verdict .score small{font-size:.85rem;font-weight:400;opacity:.6;}
+  .v-safe{background:var(--safe-soft);color:var(--safe);}
+  .v-caution{background:var(--warn-soft);color:var(--warn);}
+  .v-danger{background:var(--stop-soft);color:var(--stop);}
+
+  /* ---------- metrics ---------- */
+  .metrics{display:grid;gap:.65rem;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:1.1rem;}
+  @media (max-width:760px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  @media (max-width:430px){.metrics{grid-template-columns:1fr;}}
+  .metric{background:var(--surface-2);border-radius:11px;padding:.8rem .9rem .85rem;}
+  .metric .k{font-size:.71rem;color:var(--ink-3);display:block;margin-bottom:.3rem;font-weight:600;}
+  .metric .v{font-family:var(--f-mono);font-size:1.25rem;font-weight:600;font-variant-numeric:tabular-nums;direction:ltr;text-align:right;display:block;line-height:1.1;}
+  .metric .u{font-size:.68rem;font-weight:400;color:var(--ink-3);}
+  .metric .why{font-size:.71rem;color:var(--ink-2);line-height:1.5;margin-top:.4rem;font-weight:400;}
+
+  /* Height comes from CSS, not a width/height attribute, so the canvas can
+     respond to the viewport. app.js reads clientHeight and re-rasterises. */
+  canvas.chart{display:block;width:100%;border-radius:10px;background:var(--surface-2);touch-action:pan-y;}
+  #chart-hist{height:clamp(130px,17vh,190px);}
+  #chart-dose{height:clamp(170px,26vh,300px);}
+  .chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap;margin-bottom:.6rem;}
+  .chart-head strong{font-size:.85rem;font-weight:600;}
+  .legend{display:flex;gap:.85rem;flex-wrap:wrap;font-size:.73rem;color:var(--ink-2);}
+  .legend i{display:inline-block;width:12px;height:2.5px;border-radius:2px;margin-inline-end:.32rem;vertical-align:middle;}
+  .chart-wrap{position:relative;}
+  .chart-readout{
+    position:absolute;top:.5rem;inset-inline-start:.6rem;pointer-events:none;
+    background:var(--surface);border-radius:8px;padding:.4rem .6rem;
+    font-family:var(--f-mono);font-size:.72rem;line-height:1.5;color:var(--ink);
+    box-shadow:var(--shadow);opacity:0;transition:opacity .12s;white-space:nowrap;
+  }
+  .chart-readout.show{opacity:1;}
+  .chart-readout b{color:var(--accent);font-weight:600;}
+
+  /* ---------- levers ---------- */
+  .lever{border-top:1px solid var(--rule-2);padding-top:.95rem;margin-top:.95rem;}
+  .lever:first-of-type{border-top:0;padding-top:0;margin-top:0;}
+  .lever-head{display:flex;align-items:center;gap:.5rem;}
+  .lever-head label{font-weight:700;font-size:.87rem;cursor:pointer;}
+  .lever .mech{font-size:.75rem;color:var(--ink-2);line-height:1.55;margin:.15rem 0 .65rem;padding-inline-start:1.5rem;font-weight:400;}
+  .lever .controls{padding-inline-start:1.5rem;}
+  .lever[data-on="false"] .controls{opacity:.32;}
+
+  /* ---------- shift ---------- */
+  .shift{display:grid;grid-template-columns:1fr auto 1fr;gap:.8rem;align-items:center;background:var(--surface-2);border-radius:11px;padding:1rem;margin-bottom:1rem;}
+  .shift .side{text-align:center;min-width:0;}
+  .shift .side .k{font-size:.7rem;color:var(--ink-3);display:block;margin-bottom:.25rem;font-weight:600;}
+  .shift .side .v{font-family:var(--f-mono);font-size:1.3rem;font-weight:600;font-variant-numeric:tabular-nums;direction:ltr;display:block;line-height:1.15;}
+  .shift .side .sub{font-size:.71rem;color:var(--ink-2);margin-top:.2rem;font-weight:400;}
+  .shift .arrow{font-family:var(--f-mono);font-size:1rem;color:var(--accent);font-weight:600;direction:ltr;text-align:center;}
+  .shift .arrow small{display:block;font-size:.67rem;color:var(--ink-3);font-weight:400;margin-top:.12rem;}
+
+  .badge{display:inline-block;font-family:var(--f-mono);font-size:.65rem;font-weight:600;padding:.22em .55em;border-radius:5px;}
+  .b-safe{background:var(--safe-soft);color:var(--safe);}
+  .b-danger{background:var(--stop-soft);color:var(--stop);}
+  .b-accent{background:var(--accent-soft);color:var(--accent);}
+  .b-warn{background:var(--warn-soft);color:var(--warn);}
+
+  /* ---------- tables ---------- */
+  .scroller{overflow-x:auto;border-radius:10px;}
+  table{border-collapse:collapse;width:100%;font-size:.82rem;}
+  th,td{text-align:right;padding:.55rem .75rem;vertical-align:top;}
+  thead th{font-size:.69rem;color:var(--ink-3);font-weight:600;background:var(--surface-2);white-space:nowrap;}
+  thead th:first-child{border-start-start-radius:8px;}
+  thead th:last-child{border-start-end-radius:8px;}
+  tbody td{border-bottom:1px solid var(--rule-2);}
+  tbody tr:last-child td{border-bottom:0;}
+  tbody tr:hover td{background:var(--surface-2);}
+  td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;direction:ltr;text-align:right;}
+  td.src{color:var(--ink-2);font-size:.75rem;font-weight:400;}
+  .empty{padding:2.2rem 1rem;text-align:center;color:var(--ink-2);font-size:.86rem;font-weight:400;}
+
+  /* ---------- agent timeline ---------- */
+  .timeline{display:flex;flex-direction:column;margin:.3rem 0 .5rem;}
+  .step{display:grid;grid-template-columns:1.3rem 1fr;gap:.7rem;padding:.45rem 0;align-items:start;}
+  .step .dot{width:9px;height:9px;border-radius:50%;background:var(--rule);margin-top:.45rem;justify-self:center;position:relative;flex:none;}
+  .step .dot::after{content:"";position:absolute;top:11px;right:50%;transform:translateX(50%);width:1px;height:calc(100% + .5rem);background:var(--rule);}
+  .step:last-child .dot::after{display:none;}
+  .step[data-state="run"] .dot{background:var(--accent);animation:pulse 1.2s ease-in-out infinite;}
+  .step[data-state="done"] .dot{background:var(--safe);}
+  .step[data-state="fail"] .dot{background:var(--warn);}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
+  @media (prefers-reduced-motion:reduce){.step[data-state="run"] .dot{animation:none}}
+  .step .label{font-weight:600;font-size:.85rem;}
+  .step .detail{font-size:.76rem;color:var(--ink-2);margin-top:.1rem;line-height:1.5;font-weight:400;}
+
+  .review{border-radius:12px;padding:1rem 1.15rem;background:var(--surface);box-shadow:var(--shadow);margin-bottom:.75rem;}
+  .review .who{display:flex;justify-content:space-between;align-items:baseline;gap:.7rem;flex-wrap:wrap;margin-bottom:.45rem;}
+  .review .who strong{font-size:.92rem;font-weight:700;}
+  .review .who .via{font-family:var(--f-mono);font-size:.68rem;color:var(--ink-3);}
+  .review .text{font-size:.86rem;line-height:1.7;color:var(--ink-2);white-space:pre-wrap;font-weight:400;}
+  .review .guard{margin-top:.6rem;}
+  .verdict-box{border-radius:11px;padding:1.05rem 1.2rem;background:var(--accent-soft);}
+  .verdict-box .text{font-size:.88rem;line-height:1.75;white-space:pre-wrap;color:var(--ink);font-weight:400;}
+
+  .note{background:var(--surface-2);border-radius:11px;padding:.9rem 1.05rem;font-size:.8rem;color:var(--ink-2);line-height:1.65;font-weight:400;}
+  .note b{color:var(--ink);font-weight:600;}
+  .warn{background:var(--warn-soft);border-radius:11px;padding:.9rem 1.05rem;font-size:.82rem;color:var(--ink-2);line-height:1.6;font-weight:400;}
+  .warn b{color:var(--warn);font-weight:600;}
+  .err{background:var(--stop-soft);border-radius:11px;padding:.9rem 1.05rem;font-size:.82rem;color:var(--stop);}
+
+  footer{max-width:1340px;margin:2.5rem auto 0;padding:1.3rem clamp(1rem,3vw,2rem);border-top:1px solid var(--rule);color:var(--ink-3);font-size:.78rem;line-height:1.7;font-weight:400;}
+  footer b{color:var(--ink-2);font-weight:600;}
+  .toast{position:fixed;bottom:1.3rem;inset-inline-start:1.3rem;z-index:80;background:var(--ink);color:var(--paper);padding:.6rem 1.05rem;border-radius:9px;font-size:.84rem;font-weight:600;box-shadow:var(--shadow);opacity:0;transform:translateY(6px);transition:opacity .18s,transform .18s;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  /* ---------- guided tour ---------- */
+  .help-btn{width:26px;height:26px;border-radius:50%;border:0;cursor:pointer;background:var(--surface-2);color:var(--ink-2);font-family:var(--f);font-size:.85rem;font-weight:700;line-height:1;flex:none;}
+  .help-btn:hover{background:var(--accent);color:#fff;}
+  .help-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .tour-root{position:fixed;inset:0;z-index:100;}
+  .tour-veil{position:absolute;inset:0;background:rgba(6,12,22,.62);}
+  .tour-ring{position:absolute;border-radius:12px;box-shadow:0 0 0 9999px rgba(6,12,22,.62);pointer-events:none;transition:top .22s,left .22s,width .22s,height .22s;border:2px solid var(--accent);}
+  .tour-ring[hidden]{display:none;}
+  .tour-card{position:absolute;max-width:26rem;width:calc(100vw - 2rem);background:var(--surface);border-radius:14px;padding:1.2rem 1.35rem 1.1rem;box-shadow:0 20px 60px -20px rgba(0,0,0,.5);}
+  .tour-card.centred{top:50%;left:50%;transform:translate(-50%,-50%);}
+  .tour-card .tour-count{font-family:var(--f-mono);font-size:.68rem;color:var(--ink-3);margin-bottom:.5rem;}
+  .tour-card h3{font-size:1.12rem;font-weight:700;margin-bottom:.5rem;letter-spacing:-.01em;}
+  .tour-card p{font-size:.87rem;line-height:1.7;color:var(--ink-2);white-space:pre-line;margin-bottom:1.1rem;}
+  .tour-actions{display:flex;gap:.5rem;align-items:center;}
+  @media (prefers-reduced-motion:reduce){.tour-ring{transition:none;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <h1>מעבדת תיקון</h1>
+      <span class="sub">אלרגיה לחלב פרה</span>
+    </div>
+    <div class="status" id="status"></div>
+    <button class="help-btn" id="help" title="הדרכה — מה כל דבר עושה" aria-label="הדרכה">?</button>
+  </div>
+  <nav id="nav" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="bench">שולחן העבודה</button>
+    <button role="tab" aria-selected="false" data-tab="agents">צבא הסוכנים</button>
+    <button role="tab" aria-selected="false" data-tab="log">יומן ניסויים</button>
+    <button role="tab" aria-selected="false" data-tab="params">פרמטרים ומקורות</button>
+  </nav>
+</div>
+
+<main>
+
+<!-- ============================ BENCH ============================ -->
+<section class="panel" id="panel-bench">
+  <div class="cols">
+    <div class="stack">
+
+      <div class="card" style="order:1">
+        <h2>המטופל</h2>
+        <p class="hint">שני המספרים הראשונים הם מה שכתוב בדוח מעבדה אמיתי. הם קובעים כמה קולטנים על תא הפיטום נושאים נוגדן שמזהה חלב — וזה מה שקובע הכול.</p>
+        <div class="chips" id="chips" role="group" aria-label="בחירת מטופל"></div>
+        <div class="field">
+          <div class="field-top"><label for="sige">IgE ספציפי לחלב</label><span class="val" id="sige-v"></span></div>
+          <input type="range" id="sige" min="0" max="100" value="50">
+          <div class="sub" id="sige-note"></div>
+        </div>
+        <div class="field">
+          <div class="field-top"><label for="tige">IgE כללי</label><span class="val" id="tige-v"></span></div>
+          <input type="range" id="tige" min="0" max="100" value="50">
+          <div class="sub">אותו טיטר ספציפי מדולל על פני יותר קולטנים. לכן IgE כללי גבוה דווקא מגן.</div>
+        </div>
+        <div class="field">
+          <div class="field-top"><label for="barrier">חדירות המחסום הרירי</label><span class="val" id="barrier-v"></span></div>
+          <input type="range" id="barrier" min="0" max="100" value="30">
+          <div class="sub">כמה אלרגן שלם חוצה את דופן המעי. מאמץ, חום ו-NSAIDs מעלים את זה ומורידים את הסף פי כמה.</div>
+        </div>
+      </div>
+
+      <div class="card" style="order:5">
+        <h2>טיפול</h2>
+        <p class="hint">חמישה מנגנונים מתועדים. זה בדיוק אוצר המילים שסוכן ה-AI רשאי לבחור ממנו — הוא לא יכול להמציא טיפול שלא נמצא כאן.</p>
+        <div id="levers"></div>
+      </div>
+
+    </div>
+
+    <div class="stack">
+
+      <div class="card" style="order:2">
+        <h2>תא הפיטום</h2>
+        <p class="hint">מה שקורה על פני התא ברגע זה, מחושב מהמספרים של המנוע. גרור כדי לסובב.</p>
+
+        <div class="cell-wrap">
+          <canvas id="cell-canvas"></canvas>
+          <div class="cell-hud">
+            <div class="big" id="cell-big"></div>
+            <div class="cap" id="cell-cap">קישורים צולבים לתא</div>
+          </div>
+          <div class="cell-hint">גרור לסיבוב</div>
+        </div>
+
+        <div class="legend3d">
+          <span><i style="background:var(--gl-bare)"></i>קולטן פנוי</span>
+          <span><i style="background:var(--gl-sens)"></i>קולטן נושא IgE לחלב</span>
+          <span><i style="background:var(--gl-cross)"></i>קושר צולב — אלרגן גישר בין שניים</span>
+          <span><i style="background:var(--gl-allergen)"></i>חלבון חלב</span>
+          <span><i style="background:var(--gl-granule)"></i>היסטמין משתחרר</span>
+        </div>
+
+        <p class="hint" style="margin:.65rem 0 0">על תא פיטום אמיתי יש כרבע מיליון קולטנים. התצוגה מראה מדגם מהם, ורק אחוזים בודדים נושאים נוגדן לחלב. הקושרים הצולבים מוגדלים בכוונה — הם באמת נדירים, וזו בדיוק הנקודה: מספיקים כמאה מהם כדי להפעיל תא שלם.</p>
+
+        <div class="narrative" id="cell-narrative"></div>
+      </div>
+
+      <div class="card" style="order:3">
+        <h2>אתגר מזון</h2>
+        <p class="hint">מנה אחת של חלבון חלב. המנוע מריץ ספיגה דרך המעי, קישור צולב, דגרנולציה ופינוי היסטמין לאורך שעתיים.</p>
+        <div class="field">
+          <div class="field-top"><label for="dose">מינון</label><span class="val" id="dose-v"></span></div>
+          <input type="range" id="dose" min="0" max="100" value="55">
+          <div class="sub" id="dose-note"></div>
+        </div>
+
+        <div class="verdict" id="verdict">
+          <div><div class="word" id="verdict-word"></div><div class="why" id="verdict-why"></div></div>
+          <div class="score" id="verdict-score"></div>
+        </div>
+
+        <div class="metrics" id="metrics"></div>
+
+        <div style="margin-top:1.3rem">
+          <div class="chart-head">
+            <strong>היסטמין בפלזמה לאורך זמן</strong>
+            <div class="legend">
+              <span><i style="background:var(--accent)"></i>עם טיפול</span>
+              <span><i style="background:var(--ink-3)"></i>ללא טיפול</span>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas class="chart" id="chart-hist"></canvas></div>
+          <p class="hint" style="margin:.55rem 0 0">הקו המקווקו הוא הרמה שבה מופיעים סימפטומים אובייקטיביים. העלייה מתחילה דקות אחרי הבליעה, כי האלרגן צריך קודם לעבור את הקיבה.</p>
+        </div>
+
+        <div class="row" style="margin-top:1.2rem">
+          <button class="btn ghost" id="save-exp">שמור ליומן הניסויים</button>
+          <span style="font-size:.77rem;color:var(--ink-3)" id="save-hint"></span>
+        </div>
+      </div>
+
+      <div class="card" style="order:4">
+        <h2>עקומת מינון־תגובה</h2>
+        <p class="hint">הסף המעורר הוא המינון הקטן ביותר שמייצר סימפטומים אובייקטיביים. זה המדד שניסויי אימונותרפיה מדווחים, וזה מה שטיפול מנסה להזיז.</p>
+        <div class="shift" id="shift"></div>
+        <div class="chart-head"><div class="legend">
+          <span><i style="background:var(--accent)"></i>עם טיפול</span>
+          <span><i style="background:var(--ink-3)"></i>ללא טיפול</span>
+          <span><i style="background:var(--stop)"></i>סף התגובה</span>
+        </div></div>
+        <div class="chart-wrap">
+          <canvas class="chart" id="chart-dose"></canvas>
+          <div class="chart-readout" id="dose-readout"></div>
+        </div>
+        <p class="hint" style="margin:.55rem 0 0">העבר את העכבר או האצבע על העקומה כדי לקרוא כל נקודה. הקו האדום הוא סף התגובה — כל מה שמעליו הוא תגובה קלינית.</p>
+      </div>
+
+      <div class="card" style="order:6">
+        <h2>השוואת פרוטוקולים</h2>
+        <p class="hint">חמישה פרוטוקולים אמיתיים, מחושבים מחדש עבור המטופל שבחרת.</p>
+        <div class="scroller"><table id="protocols">
+          <thead><tr><th>פרוטוקול</th><th>סף אחרי</th><th>הסטה</th><th>IgG4</th><th>מגן מכוס</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+
+      <div class="warn" id="limits" style="order:7"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ AGENTS ============================ -->
+<section class="panel" id="panel-agents" hidden>
+  <div class="cols">
+    <div class="stack">
+      <div class="card">
+        <h2>הרצת צבא הסוכנים</h2>
+        <p class="hint">חוקר ראשי מתכנן פרוטוקולים, המנוע מריץ אותם, שלושה מומחים קוראים את הפלט במקביל, ומבקר מדרג. שתיים עד שלוש דקות.</p>
+
+        <div class="field">
+          <div class="field-top"><label for="goal">המטרה</label></div>
+          <textarea id="goal">העלה את הסף של המטופל מספיק כדי שחשיפה מקרית לביס של מאכל שמכיל חלב תהיה בטוחה</textarea>
+        </div>
+
+        <div class="field">
+          <div class="field-top"><label for="count">כמה פרוטוקולים להציע</label><span class="val" id="count-v">4</span></div>
+          <input type="range" id="count" min="2" max="6" step="1" value="4">
+        </div>
+
+        <div class="field">
+          <div class="field-top"><label for="pi-model">מודל החוקר הראשי</label></div>
+          <select id="pi-model"></select>
+          <div class="sub">מתכנן את הפרוטוקולים — שווה מודל חזק.</div>
+        </div>
+        <div class="field">
+          <div class="field-top"><label for="review-model">מודל המומחים</label></div>
+          <select id="review-model"></select>
+        </div>
+        <div class="field">
+          <div class="field-top"><label for="judge-model">מודל המבקר</label></div>
+          <select id="judge-model"></select>
+        </div>
+
+        <label class="inline" style="margin-bottom:1rem">
+          <input type="checkbox" id="offline"> הרצה offline — פאנל מובנה, בלי מודלים
+        </label>
+
+        <div class="row">
+          <button class="btn" id="run-agents">הרץ</button>
+          <button class="btn quiet" id="stop-agents" disabled>עצור</button>
+        </div>
+        <p class="hint" style="margin:.8rem 0 0" id="agent-patient"></p>
+      </div>
+
+      <div class="note">
+        <b>למה אי אפשר לרמות כאן.</b> סוכן לא יכול להחזיר מספר. הוא בוחר התערבות מרשימה סגורה, המנוע מחשב מה היא עושה, וכל מספר שמופיע בטקסט של סוכן נבדק מול פלט המנוע. מה שלא ניתן לייחוס — מסומן באדום.
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <h2>מהלך הריצה</h2>
+        <div class="timeline" id="timeline"></div>
+        <div id="agent-error"></div>
+      </div>
+
+      <div class="card" id="agent-results" hidden>
+        <h2>פרוטוקולים שהמנוע הריץ</h2>
+        <p class="hint">מדורג לפי הסטת הסף. המספרים האלה מגיעים מהמנוע, לא מהסוכן שהציע אותם.</p>
+        <div class="scroller"><table id="agent-protocols">
+          <thead><tr><th>פרוטוקול</th><th>מנופים</th><th>סף אחרי</th><th>הסטה</th><th>מגן מכוס</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+
+      <div id="agent-optimised"></div>
+      <div id="agent-reviews"></div>
+      <div id="agent-verdict"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ LOG ============================ -->
+<section class="panel" id="panel-log" hidden>
+  <div class="card">
+    <h2>יומן ניסויים</h2>
+    <p class="hint">כל ריצה ששמרת נכתבת לקובץ בפרויקט. אפשר לטעון ריצה בחזרה לשולחן העבודה ולהמשיך ממנה.</p>
+    <div class="row" style="margin-bottom:1.1rem">
+      <button class="btn quiet" id="refresh-log">רענן</button>
+      <button class="btn quiet" id="clear-log">מחק הכול</button>
+      <span style="font-size:.79rem;color:var(--ink-3)" id="log-count"></span>
+    </div>
+    <div class="scroller"><table id="log-table">
+      <thead><tr><th>מתי</th><th>הערה</th><th>מטופל</th><th>טיפול</th><th>סף</th><th>הסטה</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ============================ PARAMS ============================ -->
+<section class="panel" id="panel-params" hidden>
+  <div class="card">
+    <h2>מקור כל פרמטר</h2>
+    <p class="hint">מספר שווה משהו רק אם אפשר להגיד מאיפה הוא.
+      <span class="badge b-accent">measured</span> דווח ישירות בניסוי המצוטט ·
+      <span class="badge b-warn">calibrated</span> הותאם כדי לשחזר תוצאה קלינית מפורסמת ·
+      <span class="badge b-danger">assumed</span> בחירת מידול בלי מדידה מאחוריה.
+    </p>
+    <div class="row" style="margin-bottom:1rem">
+      <input type="text" id="param-filter" placeholder="סנן לפי שם, סיווג או ציטוט…" style="max-width:26rem">
+    </div>
+    <div class="scroller"><table id="params-table">
+      <thead><tr><th>פרמטר</th><th>ערך</th><th>יחידה</th><th>סיווג</th><th>ציטוט</th><th>הערה</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <b>מה זה לא.</b> הסף המעורר כאן מסומלץ, לא נמדד — מטופל אמיתי עלול להיות שונה בסדר גודל. המודל לא כולל מתווכים מלבד היסטמין, לא מפריד בין קזאין למי גבינה, ולא מדמה טעויות מינון או קו־פקטורים משתנים. אין להסיק מכאן שום החלטה קלינית.
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

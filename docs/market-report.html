@@ -1,0 +1,651 @@
+<title>מעבדת תיקון</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;600;800;900&family=Assistant:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+
+<style>
+  :root{
+    --paper:#F7F3F8;
+    --surface:#FFFFFF;
+    --surface-2:#F1EAF3;
+    --ink:#241B2E;
+    --ink-2:#5B4E68;
+    --ink-3:#8C7F98;
+    --rule:#E2DAE7;
+    --rule-strong:#CFC2D6;
+    --hema:#5A34A0;
+    --hema-soft:#EFE7FA;
+    --eosin:#C25C72;
+    --eosin-soft:#FAECEF;
+    --good:#2E7D6B;
+    --warn:#9E6512;
+    --stop:#B03A4A;
+
+    --f-display:"Frank Ruhl Libre", "David Libre", Georgia, serif;
+    --f-body:"Assistant", "Segoe UI", system-ui, sans-serif;
+    --f-mono:"IBM Plex Mono", ui-monospace, "Consolas", monospace;
+
+    --measure:66ch;
+    --pad:clamp(1.1rem, 4vw, 2.75rem);
+    direction:rtl;
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#15111C;
+      --surface:#1D1826;
+      --surface-2:#241E30;
+      --ink:#EDE7F2;
+      --ink-2:#B3A8BE;
+      --ink-3:#847895;
+      --rule:#302738;
+      --rule-strong:#443853;
+      --hema:#B294EA;
+      --hema-soft:#251C38;
+      --eosin:#E8909E;
+      --eosin-soft:#33202A;
+      --good:#5CBFA6;
+      --warn:#DDA353;
+      --stop:#E8798A;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#15111C;
+    --surface:#1D1826;
+    --surface-2:#241E30;
+    --ink:#EDE7F2;
+    --ink-2:#B3A8BE;
+    --ink-3:#847895;
+    --rule:#302738;
+    --rule-strong:#443853;
+    --hema:#B294EA;
+    --hema-soft:#251C38;
+    --eosin:#E8909E;
+    --eosin-soft:#33202A;
+    --good:#5CBFA6;
+    --warn:#DDA353;
+    --stop:#E8798A;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    direction:rtl;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--f-body);
+    font-size:clamp(1rem, 0.96rem + 0.2vw, 1.09rem);
+    line-height:1.72;
+    font-weight:400;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{
+    max-width:min(76rem, 100%);
+    margin-inline:auto;
+    padding-inline:var(--pad);
+    padding-block:0 clamp(3rem,8vw,6rem);
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    padding-block:clamp(3rem,9vw,6.5rem) clamp(2rem,5vw,3.5rem);
+    border-bottom:1px solid var(--rule);
+    overflow:hidden;
+  }
+  .stain{
+    position:absolute; inset:0;
+    pointer-events:none;
+    opacity:.5;
+    background:
+      radial-gradient(9px 12px at 12% 22%, color-mix(in srgb, var(--hema) 40%, transparent), transparent 70%),
+      radial-gradient(7px 9px at 19% 61%, color-mix(in srgb, var(--eosin) 34%, transparent), transparent 70%),
+      radial-gradient(12px 9px at 31% 12%, color-mix(in srgb, var(--hema) 26%, transparent), transparent 70%),
+      radial-gradient(8px 11px at 7% 79%, color-mix(in srgb, var(--eosin) 28%, transparent), transparent 70%),
+      radial-gradient(10px 10px at 40% 84%, color-mix(in srgb, var(--hema) 22%, transparent), transparent 70%),
+      radial-gradient(6px 8px at 26% 40%, color-mix(in srgb, var(--eosin) 30%, transparent), transparent 70%),
+      radial-gradient(11px 13px at 3% 45%, color-mix(in srgb, var(--hema) 18%, transparent), transparent 70%);
+  }
+  .hero > *{position:relative;}
+
+  .eyebrow{
+    font-family:var(--f-mono);
+    font-size:.7rem;
+    font-weight:600;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--hema);
+    margin:0 0 1.1rem;
+  }
+  h1{
+    font-family:var(--f-display);
+    font-weight:900;
+    font-size:clamp(2.4rem, 1.5rem + 4vw, 4.4rem);
+    line-height:1.04;
+    letter-spacing:-0.015em;
+    text-wrap:balance;
+    margin:0 0 1.1rem;
+    max-width:18ch;
+  }
+  .deck{
+    font-size:clamp(1.08rem,1rem + .5vw,1.35rem);
+    color:var(--ink-2);
+    max-width:52ch;
+    font-weight:300;
+    line-height:1.6;
+    margin:0;
+  }
+
+  .verdict{
+    margin-top:clamp(2rem,5vw,3rem);
+    display:grid;
+    gap:1rem;
+    grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));
+  }
+  .vcard{
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:1.15rem 1.3rem 1.3rem;
+    display:flex;
+    flex-direction:column;
+    gap:.4rem;
+  }
+  .vcard .k{
+    font-family:var(--f-display);
+    font-weight:800;
+    font-size:1.5rem;
+    line-height:1.2;
+  }
+  .vcard.yes .k{color:var(--good);}
+  .vcard.no  .k{color:var(--stop);}
+  .vcard.mid .k{color:var(--warn);}
+  .vcard p{margin:0;color:var(--ink-2);font-size:.95rem;line-height:1.6;}
+
+  /* ---------- sections ---------- */
+  section{padding-block:clamp(2.6rem,6vw,4.5rem);border-bottom:1px solid var(--rule);}
+  section:last-of-type{border-bottom:none;}
+
+  .shead{display:flex;align-items:baseline;gap:.85rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+  .snum{
+    font-family:var(--f-mono);
+    font-size:.72rem;
+    font-weight:600;
+    color:var(--ink-3);
+    letter-spacing:.1em;
+    padding-top:.3rem;
+  }
+  h2{
+    font-family:var(--f-display);
+    font-weight:800;
+    font-size:clamp(1.6rem,1.2rem + 1.6vw,2.5rem);
+    line-height:1.15;
+    letter-spacing:-0.01em;
+    margin:0;
+    text-wrap:balance;
+  }
+  h3{
+    font-family:var(--f-display);
+    font-weight:600;
+    font-size:1.22rem;
+    line-height:1.3;
+    margin:0 0 .5rem;
+  }
+  p{max-width:var(--measure);}
+  section > p{margin-block:0 1.1rem;}
+  .lede{font-size:1.1rem;color:var(--ink-2);font-weight:300;}
+
+  strong{font-weight:700;color:var(--ink);}
+  code{
+    font-family:var(--f-mono);
+    font-size:.87em;
+    background:var(--surface-2);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:.08em .38em;
+    direction:ltr;
+    unicode-bidi:embed;
+    display:inline-block;
+  }
+  a{color:var(--hema);text-underline-offset:.2em;text-decoration-thickness:1px;}
+  a:focus-visible{outline:2px solid var(--eosin);outline-offset:3px;border-radius:2px;}
+
+  /* ---------- landscape cards ---------- */
+  .land{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden;}
+  .lrow{
+    background:var(--surface);
+    display:grid;
+    grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr);
+    gap:0;
+  }
+  .lrow > div{padding:1.15rem 1.25rem;}
+  .lrow + .lrow{border-top:0;}
+  .lrow .who{border-inline-start:1px solid var(--rule);}
+  .lrow .gap{border-inline-start:1px solid var(--rule);background:var(--surface);}
+  .lrow .cat h3{margin-bottom:.3rem;}
+  .lrow .names{
+    font-family:var(--f-mono);
+    font-size:.79rem;
+    line-height:1.75;
+    color:var(--ink-2);
+    direction:ltr;
+    text-align:right;
+  }
+  .lrow p{font-size:.93rem;margin:0;color:var(--ink-2);line-height:1.62;max-width:none;}
+  .tag{
+    font-family:var(--f-mono);
+    font-size:.66rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-weight:600;
+    padding:.2em .55em;
+    border-radius:2px;
+    display:inline-block;
+    margin-bottom:.5rem;
+  }
+  .tag.has{background:var(--hema-soft);color:var(--hema);}
+  .tag.lacks{background:var(--eosin-soft);color:var(--eosin);}
+  @media (max-width:760px){
+    .lrow{grid-template-columns:1fr;}
+    .lrow .who,.lrow .gap{border-inline-start:0;border-top:1px solid var(--rule);}
+  }
+
+  /* ---------- gap grid ---------- */
+  .four{
+    display:grid;
+    gap:.9rem;
+    grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));
+    margin-block:1.5rem;
+  }
+  .qcard{
+    border:1px solid var(--rule);
+    background:var(--surface);
+    border-radius:3px;
+    padding:1rem 1.1rem;
+  }
+  .qcard .n{
+    font-family:var(--f-mono);
+    font-size:.68rem;
+    letter-spacing:.1em;
+    color:var(--ink-3);
+    display:block;
+    margin-bottom:.45rem;
+  }
+  .qcard p{margin:0;font-size:.93rem;color:var(--ink-2);max-width:none;}
+  .qcard b{color:var(--ink);font-weight:700;}
+
+  /* ---------- stack ---------- */
+  .stack{display:flex;flex-direction:column;gap:6px;margin-block:1.6rem;}
+  .layer{
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:1rem 1.15rem;
+    display:grid;
+    grid-template-columns:minmax(0,13rem) minmax(0,1fr);
+    gap:.35rem 1.4rem;
+    align-items:start;
+    border-inline-end:3px solid var(--hema);
+  }
+  .layer:nth-child(2){border-inline-end-color:var(--eosin);}
+  .layer:nth-child(3){border-inline-end-color:var(--hema);}
+  .layer:nth-child(4){border-inline-end-color:var(--eosin);}
+  .layer:nth-child(5){border-inline-end-color:var(--hema);}
+  .layer .lname{font-family:var(--f-display);font-weight:700;font-size:1.05rem;line-height:1.35;}
+  .layer .lwhat{font-size:.94rem;color:var(--ink-2);line-height:1.6;}
+  .layer .ltech{
+    grid-column:1/-1;
+    font-family:var(--f-mono);
+    font-size:.76rem;
+    color:var(--ink-3);
+    direction:ltr;
+    text-align:right;
+    padding-top:.5rem;
+    margin-top:.3rem;
+    border-top:1px dashed var(--rule);
+  }
+  @media (max-width:640px){ .layer{grid-template-columns:1fr;} }
+
+  /* ---------- table ---------- */
+  .scroller{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;margin-block:1.5rem;}
+  table{border-collapse:collapse;width:100%;min-width:34rem;background:var(--surface);}
+  th,td{text-align:right;padding:.7rem .95rem;border-bottom:1px solid var(--rule);font-size:.92rem;vertical-align:top;}
+  thead th{
+    font-family:var(--f-mono);
+    font-size:.7rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    font-weight:600;
+    background:var(--surface-2);
+    border-bottom:1px solid var(--rule-strong);
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;direction:ltr;color:var(--ink-2);}
+  td b{font-weight:700;}
+
+  /* ---------- callout ---------- */
+  .callout{
+    background:var(--eosin-soft);
+    border:1px solid color-mix(in srgb, var(--eosin) 32%, transparent);
+    border-radius:3px;
+    padding:1.25rem 1.4rem;
+    margin-block:1.6rem;
+  }
+  .callout h3{color:var(--eosin);margin-bottom:.5rem;}
+  .callout p{max-width:var(--measure);margin:0 0 .7rem;color:var(--ink-2);}
+  .callout p:last-child{margin-bottom:0;}
+
+  /* ---------- phases ---------- */
+  .phases{display:grid;gap:.8rem;margin-block:1.5rem;}
+  .phase{
+    display:grid;
+    grid-template-columns:minmax(0,7.5rem) minmax(0,1fr);
+    gap:.3rem 1.3rem;
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:1rem 1.15rem;
+  }
+  .phase .when{
+    font-family:var(--f-mono);
+    font-size:.74rem;
+    color:var(--hema);
+    font-weight:600;
+    letter-spacing:.05em;
+    padding-top:.22rem;
+  }
+  .phase .what h3{font-size:1.05rem;margin-bottom:.3rem;}
+  .phase .what p{margin:0;font-size:.93rem;color:var(--ink-2);max-width:none;}
+  @media (max-width:560px){ .phase{grid-template-columns:1fr;} }
+
+  ul{max-width:var(--measure);padding-inline-start:0;padding-inline-end:1.15rem;margin-block:0 1.1rem;}
+  li{margin-bottom:.4rem;color:var(--ink-2);}
+  li b{color:var(--ink);}
+  li::marker{color:var(--eosin);}
+
+  /* ---------- sources ---------- */
+  .sources{
+    font-size:.86rem;
+    columns:2;
+    column-gap:2.5rem;
+    max-width:none;
+  }
+  .sources li{break-inside:avoid;margin-bottom:.55rem;}
+  @media (max-width:640px){ .sources{columns:1;} }
+
+  footer{
+    padding-block:2rem;
+    color:var(--ink-3);
+    font-family:var(--f-mono);
+    font-size:.74rem;
+    border-top:1px solid var(--rule);
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="stain" aria-hidden="true"></div>
+    <p class="eyebrow">בדיקת שוק · אוגוסט 2026</p>
+    <h1>מעבדת תיקון</h1>
+    <p class="deck">סימולציה נגישה שבה צבא סוכני AI מתקן תאים — האם כבר קיים דבר כזה, ומה בדיוק נשאר לבנות.</p>
+
+    <div class="verdict">
+      <div class="vcard yes">
+        <span class="k">כן</span>
+        <p>כל רכיב בנפרד כבר קיים, חלקו פתוח וחינמי. אתה לא ממציא טכנולוגיה חדשה.</p>
+      </div>
+      <div class="vcard no">
+        <span class="k">לא</span>
+        <p>אף אחד לא חיבר את ארבעת הרכיבים לכלי אחד נגיש. זה הפער האמיתי.</p>
+      </div>
+      <div class="vcard mid">
+        <span class="k">בתנאי</span>
+        <p>רק אם המספרים מגיעים ממנוע סימולציה ומנתונים אמיתיים — לא מה־LLM.</p>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="shead"><span class="snum">01</span><h2>מה כבר קיים בעולם</h2></div>
+    <p class="lede">חיפשתי בארבעה כיוונים שונים. בכל אחד מהם יש שחקנים חזקים — ובכל אחד מהם חסר בדיוק מה שאתה מתאר.</p>
+
+    <div class="land">
+
+      <div class="lrow">
+        <div class="cat">
+          <h3>מודלי תא וירטואלי</h3>
+          <p class="names">Arc Institute · STATE<br>GenBio AI · AIDO Cell<br>Insilico · Virtual Aging Cell<br>Ginkgo · VCPI</p>
+        </div>
+        <div class="who">
+          <span class="tag has">מה יש</span>
+          <p>חיזוי אמיתי של תגובת תא לפרטורבציה גנטית או כימית. STATE אומן על 167 מיליון תאים תצפיתיים ועוד למעלה מ־100 מיליון תאי פרטורבציה, המשקולות פתוחות ב־Hugging Face.</p>
+        </div>
+        <div class="gap">
+          <span class="tag lacks">מה חסר</span>
+          <p>אין ויזואליזציה, אין ממשק, אין סוכנים. צריך GPU, נתוני scRNA-seq וידע בביואינפורמטיקה. הרישיון של STATE הוא לא־מסחרי.</p>
+        </div>
+      </div>
+
+      <div class="lrow">
+        <div class="cat">
+          <h3>צבא סוכני LLM לגילוי תרופות</h3>
+          <p class="names">Stanford · The Virtual Lab<br>PharmAgents<br>Prompt-to-Pill</p>
+        </div>
+        <div class="who">
+          <span class="tag has">מה יש</span>
+          <p>בדיוק ארכיטקטורת "צבא הסוכנים" שאתה מדבר עליה — חוקר ראשי שמנהל צוות סוכני מומחים. ה־Virtual Lab של סטנפורד תכנן 92 ננו־נוגדנים נגד SARS-CoV-2 שאומתו במעבדה אמיתית, ופורסם ב־Nature. הקוד פתוח.</p>
+        </div>
+        <div class="gap">
+          <span class="tag lacks">מה חסר</span>
+          <p>טקסט בלבד. שיחות בין סוכנים ופלט קבצים. אין סימולציה חיה, אין ויזואליזציה, אין מדדים שמשתנים מול העיניים. לא מיועד לאף אחד מחוץ למעבדת מחקר.</p>
+        </div>
+      </div>
+
+      <div class="lrow">
+        <div class="cat">
+          <h3>תאומים דיגיטליים של מטופלים</h3>
+          <p class="names">Sanofi · Bayer<br>Nova In Silico · Jinkō<br>Certara</p>
+        </div>
+        <div class="who">
+          <span class="tag has">מה יש</span>
+          <p>הרמה שאתה מתאר כ"כאילו בבני אדם": מטופל וירטואלי שלם, סימולציית ניסוי קליני, קבלה רגולטורית מתחילה. Bayer אף שחררה חלק כקוד פתוח.</p>
+        </div>
+        <div class="gap">
+          <span class="tag lacks">מה חסר</span>
+          <p>סגור לחלוטין ו־B2B פארמה. עלות של מאות אלפי דולרים. ליחיד, לסטארטאפ או לחוקר עצמאי אין שום דרך להיכנס.</p>
+        </div>
+      </div>
+
+      <div class="lrow">
+        <div class="cat">
+          <h3>סימולציות תא משחקיות</h3>
+          <p class="names">PhysiCell + PhysiCell Studio<br>CompuCell3D<br>Cell Studio (אונ' תל אביב)<br>Basic Immune Simulator</p>
+        </div>
+        <div class="who">
+          <span class="tag has">מה יש</span>
+          <p>סימולציית agent-based אמיתית עם פיזיקה, ויזואליזציה תלת־ממדית ואינטראקטיביות. Cell Studio בנוי בדיוק על Unity, ו־BIS כבר מדמה תגובות רגישות־יתר — כלומר אלרגיה.</p>
+        </div>
+        <div class="gap">
+          <span class="tag lacks">מה חסר</span>
+          <p>אפס AI. אפס סוכנים. ממשק אקדמי כבד, XML ידני, אין חיבור לנתונים חיים ואין מי שמפרש את התוצאה בשבילך.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><span class="snum">02</span><h2>הפער — וזה בדיוק מה שאתה מתאר</h2></div>
+    <p class="lede">ארבעת העולמות האלה כמעט לא מדברים ביניהם. אף מוצר לא מחזיק את כל הארבעה במקום אחד, ובטח לא כזה שאדם פרטי יכול לפתוח ולשחק איתו.</p>
+
+    <div class="four">
+      <div class="qcard"><span class="n">א</span><p><b>מנוע אמיתי</b> שמייצר את המספרים, לא ניחוש של מודל שפה.</p></div>
+      <div class="qcard"><span class="n">ב</span><p><b>צבא סוכנים</b> שמציע היפותזות, מבקר אותן ומפרש את התוצאה.</p></div>
+      <div class="qcard"><span class="n">ג</span><p><b>ויזואליזציה</b> שאפשר לראות, לעצור ולהזיז — לא גרף בנייר.</p></div>
+      <div class="qcard"><span class="n">ד</span><p><b>נגישות</b> — נפתח בדפדפן, בלי GPU, בלי דוקטורט, בלי חוזה.</p></div>
+    </div>
+
+    <p>מי שיש לו א' חסר ב' ו־ג'. מי שיש לו ב' חסר א'. מי שיש לו ג' חסר הכול. ומי שיש לו הכול — Sanofi, Bayer — סוגר את זה מאחורי חומה. <strong>החיבור של ארבעתם לכלי אחד פתוח הוא מוצר שלא קיים היום.</strong></p>
+  </section>
+
+  <section>
+    <div class="shead"><span class="snum">03</span><h2>האזהרה שקובעת אם זה מוצר או צעצוע</h2></div>
+
+    <div class="callout">
+      <h3>מודל שפה לא מדמה ביולוגיה</h3>
+      <p>אם סוכן AI ממציא את המספרים — ריכוז ההיסטמין, אחוז הדגרנולציה, עקומת המינון — התוצאה נראית משכנעת לחלוטין ואין לה שום ערך. אף אחד בעולם הפארמה לא ייגע בזה, ובצדק.</p>
+      <p>הכלל היחיד שחייב להישמר: <strong>המספרים מגיעים ממנוע דטרמיניסטי ומנתונים אמיתיים. הסוכנים לא מחשבים — הם מציעים מה לבדוק, מבקרים את התוצאה ומסבירים אותה.</strong> זו החלוקה שמפרידה בין POC שאפשר להראות למשקיע לבין הדגמה יפה שמתפוררת בשאלה הראשונה.</p>
+      <p>הפורמט שכבר בנית ב־<code>kie_agents.py</code> — סכמת פלט, אימות עצמי ו־<code>critic()</code> — הוא בדיוק המנגנון שמאלץ את זה לקרות.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><span class="snum">04</span><h2>הארכיטקטורה</h2></div>
+    <p class="lede">חמש שכבות. כל אחת עומדת על טכנולוגיה שקיימת, פתוחה ובחלקה כבר אצלך על הדיסק.</p>
+
+    <div class="stack">
+      <div class="layer">
+        <div class="lname">1 · נתונים אמיתיים</div>
+        <div class="lwhat">מסדי נתונים ביו־רפואיים ציבוריים — מולקולות, חלבונים, מסלולים, קשרי גן־מחלה. פתוחים, ללא מפתח API, ללא עלות.</div>
+        <div class="ltech">ChEMBL · PubChem · UniProt · AlphaFold DB · Open Targets · Reactome</div>
+      </div>
+      <div class="layer">
+        <div class="lname">2 · מנוע סימולציה</div>
+        <div class="lwhat">כאן נולדים המספרים. מודל agent-based או מערכת משוואות דיפרנציאליות שמריצה את הלולאה הביולוגית בפועל — דטרמיניסטית, ניתנת לשחזור, ניתנת לבדיקה.</div>
+        <div class="ltech">PhysiCell (BSD) · או מודל ODE ייעודי ב-Python/SciPy</div>
+      </div>
+      <div class="layer">
+        <div class="lname">3 · צבא הסוכנים</div>
+        <div class="lwhat">חוקר ראשי, אימונולוג, פרמקולוג, טוקסיקולוג, סטטיסטיקאי ומבקר. מציעים התערבויות, קוראים את הפלט של המנוע ומסבירים אותו. כאן נכנסות תבניות הסירקולציה שכבר בנית.</div>
+        <div class="ltech">KIE (13 מודלים) + OpenRouter free tier · ask / pipeline / critic / ensemble</div>
+      </div>
+      <div class="layer">
+        <div class="lname">4 · ויזואליזציה</div>
+        <div class="lwhat">התא, הרקמה והגוף. שכבת התצוגה שהופכת את המספרים למשהו שאפשר לראות, לעצור, להזיז ולהבין בלי רקע מדעי.</div>
+        <div class="ltech">WebGL / Three.js בדפדפן · או Unity 2022.3.39f1 · או Godot</div>
+      </div>
+      <div class="layer">
+        <div class="lname">5 · ממשק המעבדה</div>
+        <div class="lwhat">בחירת מחלה, סליידרים של מינון וזמן, כפתור הרצה, לוח מדדים חי, והשוואה בין ריצות. זה מה שהופך את זה מקוד למוצר.</div>
+        <div class="ltech">דפדפן · לוח מדדים + היסטוריית ניסויים</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><span class="snum">05</span><h2>במה להתחיל — אלרגיה לחלב</h2></div>
+    <p class="lede">מבין שלוש המחלות שהזכרת, אלרגיה לחלב היא הבחירה הנכונה לראשונה. הלולאה שלה קצרה, מתועדת היטב, והפלט שלה מדיד.</p>
+
+    <p>המסלול <code>β-lactoglobulin → IgE → FcεRI → mast cell → histamine → symptom score</code> הוא לולאה סגורה שאפשר לממש במלואה. לעומת זאת אפילפסיה דורשת דינמיקה נוירונית — Hodgkin-Huxley או neural mass models — וזה פרויקט בפני עצמו. טפילים דורשים מודל אקולוגי של מארח־טפיל. <strong>תתחיל בקצר, תוכיח את הלולאה מקצה לקצה, ואז תוסיף מחלה שנייה.</strong></p>
+
+    <h3 style="margin-top:2rem">המדדים שעוברים לעולם האמיתי</h3>
+    <p>אלה לא מספרים מומצאים לתצוגה — כל אחד מהם הוא מדד שחוקר אמיתי משתמש בו:</p>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>מדד</th><th>מה הוא אומר</th><th>יחידה</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>IC50 / EC50</b></td><td>הריכוז שמשיג חצי מהאפקט המרבי — שפת הבסיס של פרמקולוגיה</td><td class="num">nM</td></tr>
+          <tr><td><b>טיטר IgE ספציפי</b></td><td>עוצמת הרגישות האלרגית לחלבון החלב</td><td class="num">kU/L</td></tr>
+          <tr><td><b>דגרנולציית מאסט</b></td><td>אחוז תאי הפיטום שהתפוצצו ושחררו היסטמין</td><td class="num">%</td></tr>
+          <tr><td><b>השראת Treg</b></td><td>עד כמה ההתערבות מלמדת את המערכת סובלנות</td><td class="num">%</td></tr>
+          <tr><td><b>אינדקס תרפויטי</b></td><td>המרחק בין המינון היעיל למינון הרעיל — מדד הבטיחות</td><td class="num">TD50/ED50</td></tr>
+          <tr><td><b>עקומת מינון־תגובה</b></td><td>הצורה המלאה, לא נקודה בודדת — זה מה שמשכנע</td><td class="num">Hill</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><span class="snum">06</span><h2>מה יש לך ומה חסר</h2></div>
+
+    <p>בדקתי את הדיסק. שכבת ה־AI כמעט מוכנה, שכבת הביולוגיה ריקה לגמרי.</p>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>רכיב</th><th>מצב</th><th>איפה</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>אורקסטרציית סוכנים</b></td><td style="color:var(--good)">מוכן</td><td class="num">קוזנסוס/kie_agents.py — 13 מודלים</td></tr>
+          <tr><td><b>קונצנזוס רב־מנועי</b></td><td style="color:var(--good)">מוכן</td><td class="num">seo-platform/game-ai-toolkit/consensus.js</td></tr>
+          <tr><td><b>OpenRouter + free tier</b></td><td style="color:var(--good)">מוכן</td><td class="num">מפתחות מוגדרים בסביבה</td></tr>
+          <tr><td><b>מנוע גרפי</b></td><td style="color:var(--good)">מוכן</td><td class="num">IsraelRTS · Unity 2022.3.39f1 · 261 סקריפטים</td></tr>
+          <tr><td><b>מנוע סימולציה ביולוגי</b></td><td style="color:var(--stop)">חסר</td><td class="num">PhysiCell — קוד פתוח, צריך לשלב</td></tr>
+          <tr><td><b>נתונים ביו־רפואיים</b></td><td style="color:var(--stop)">חסר</td><td class="num">אפס. אין תיקייה אחת בתחום</td></tr>
+          <tr><td><b>ולידציה מדעית</b></td><td style="color:var(--warn)">קריטי</td><td class="num">חייב מקור אמיתי לכל מספר</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="color:var(--warn)"><strong>הערת אבטחה:</strong> ב־<code>kie_agents.py</code> שורה 19 יש מפתח KIE מוטמע כטקסט בקוד. לפני שהפרויקט הזה נהיה ציבורי — צריך להוציא אותו משם.</p>
+  </section>
+
+  <section>
+    <div class="shead"><span class="snum">07</span><h2>סדר הבנייה</h2></div>
+    <p class="lede">כל שלב מסתיים במשהו שאפשר להראות. אין שלב שתלוי בהצלחת השלב שאחריו.</p>
+
+    <div class="phases">
+      <div class="phase">
+        <div class="when">שלב 0</div>
+        <div class="what">
+          <h3>לולאה אחת, מקצה לקצה</h3>
+          <p>מודל ODE של אלרגיה לחלב שרץ בטרמינל ומוציא עקומת מינון־תגובה אמיתית. בלי סוכנים, בלי גרפיקה. אם המספרים לא מחזיקים כאן — כל השאר לא רלוונטי.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="when">שלב 1</div>
+        <div class="what">
+          <h3>הסוכנים נכנסים ללולאה</h3>
+          <p>החוקר הראשי מציע התערבות, המנוע מריץ, האימונולוג והטוקסיקולוג קוראים את הפלט, המבקר מחליט אם התוצאה מוצדקת. אותה תבנית <code>critic()</code> שכבר עובדת אצלך.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="when">שלב 2</div>
+        <div class="what">
+          <h3>המעבדה נפתחת בדפדפן</h3>
+          <p>סליידרים, ויזואליזציה של שדה תאים, לוח מדדים חי והשוואת ריצות. זו הנקודה שבה זה מפסיק להיות סקריפט ומתחיל להיות מוצר.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="when">שלב 3</div>
+        <div class="what">
+          <h3>מחלה שנייה מוכיחה שזו פלטפורמה</h3>
+          <p>מחלה נוספת שנכנסת דרך אותו מנוע ואותם סוכנים. ברגע שהשנייה נכנסת בלי לשכתב את הליבה — יש לך פלטפורמה, לא דמו.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><span class="snum">08</span><h2>מקורות</h2></div>
+    <ul class="sources">
+      <li><a href="https://www.nature.com/articles/s41586-025-09442-9">The Virtual Lab of AI agents designs new SARS-CoV-2 nanobodies — Nature, 2025</a></li>
+      <li><a href="https://github.com/zou-group/virtual-lab">zou-group/virtual-lab — קוד פתוח</a></li>
+      <li><a href="https://arcinstitute.org/tools/state">Arc Institute · מודל התא הווירטואלי STATE</a></li>
+      <li><a href="https://github.com/ArcInstitute/state">ArcInstitute/state — GitHub</a></li>
+      <li><a href="https://huggingface.co/arcinstitute/SE-600M">arcinstitute/SE-600M — Hugging Face</a></li>
+      <li><a href="https://arcinstitute.org/news/virtual-cell-challenge-2026">Virtual Cell Challenge 2026 — פרס $100,000</a></li>
+      <li><a href="https://arxiv.org/abs/2503.22164">PharmAgents: Building a Virtual Pharma with LLM Agents</a></li>
+      <li><a href="https://academic.oup.com/bioinformaticsadvances/article/6/1/vbaf323/8403080">Prompt-to-Pill: Multi-Agent Drug Discovery Pipeline</a></li>
+      <li><a href="https://journals.plos.org/ploscompbiol/article?id=10.1371%2Fjournal.pcbi.1005991">PhysiCell — סימולטור תאים פיזיקלי בקוד פתוח</a></li>
+      <li><a href="https://royalsocietypublishing.org/rsif/article/16/160/20190264/87228/Modelling-cell-surface-dynamics-and-cell-cell">Cell Studio — סימולציית תאים על מנוע משחק</a></li>
+      <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2186321/">The Basic Immune Simulator — כולל רגישות־יתר ואלרגיה</a></li>
+      <li><a href="https://www.nature.com/articles/s41746-025-02198-6">מודלי תא וירטואלי במחקר פרה־קליני — npj Digital Medicine</a></li>
+      <li><a href="https://www.nature.com/articles/s41540-025-00592-0">תאומים דיגיטליים בניסויים קליניים אקראיים</a></li>
+      <li><a href="https://www.novainsilico.ai/clinical-trial-simulation/digital-twin-for-clinical-research-and-development/">Nova In Silico · Jinkō — תאום דיגיטלי מסחרי</a></li>
+      <li><a href="https://chembl.gitbook.io/chembl-interface-documentation/web-services/chembl-data-web-services">ChEMBL Data Web Services</a></li>
+      <li><a href="https://alphafold.ebi.ac.uk/api-docs">AlphaFold Protein Structure Database API</a></li>
+      <li><a href="https://academic.oup.com/nar/article/54/D1/D673/8326464">Reactome Knowledgebase 2026</a></li>
+      <li><a href="https://github.com/aristoteleo/awesome-bioagent-papers">awesome-bioagent-papers — מאגר סוכני AI בביולוגיה</a></li>
+    </ul>
+  </section>
+
+  <footer>בדיקת שוק ותכנון ארכיטקטורה · אוגוסט 2026</footer>
+
+</div>

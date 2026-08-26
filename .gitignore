@@ -1,0 +1,34 @@
+# --- credentials: never publish -------------------------------------------
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.json
+
+# --- local working notes, not part of the public project -------------------
+CLAUDE.md
+.claude/
+
+# --- generated at runtime --------------------------------------------------
+experiments.jsonl
+server.log
+server.out
+web/_probe.html
+
+# --- python ----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# --- node ------------------------------------------------------------------
+node_modules/
+
+# --- editors / os ----------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,11 @@
+{
+  "name": "tikkun-lab-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser build of the Tikkun Lab engine",
+  "scripts": {
+    "verify": "node verify.mjs",
+    "build": "node build.mjs"
+  }
+}

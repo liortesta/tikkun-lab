@@ -1,0 +1,2529 @@
+<title>מעבדת תיקון</title>
+<text y='.9em' font-size='90'>🔬</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{direction:rtl;
+    --paper:#FFFFFF; --surface:#FFFFFF; --surface-2:#F5F7FA; --sunken:#F0F3F8;
+    --ink:#0A1422; --ink-2:#37455C; --ink-3:#5C6B80;
+    --rule:#E6EBF2; --rule-2:#F0F3F8;
+    --accent:#0B57D0; --accent-2:#3B82F6; --accent-soft:#EBF2FE;
+    --safe:#0E7C66; --safe-soft:#E6F4F0;
+    --warn:#9A5B08; --warn-soft:#FDF3E3;
+    --stop:#B93028; --stop-soft:#FDECEA;
+    --gold:#B0790E;
+    --f:"Assistant","Segoe UI",system-ui,sans-serif;
+    --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+    --shadow:0 1px 2px rgba(12,22,38,.04), 0 8px 24px -12px rgba(12,22,38,.10);
+    --cell-bg:#F0F4FA;
+    /* Receptor dots are drawn unlit, so on a pale membrane they must be darker
+       than its shaded side or they read as white specks rather than proteins. */
+    --gl-membrane:#dbe5f2; --gl-rim:#0B57D0; --gl-bare:#7A8CA6;
+    --gl-sens:#0B57D0; --gl-cross:#C87F04; --gl-allergen:#0A7D63; --gl-granule:#C2431F;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#0A0F18; --surface:#101724; --surface-2:#16202F; --sunken:#0C1220;
+      --ink:#F6F9FC; --ink-2:#D2DCE8; --ink-3:#A2B0C2;
+      --rule:#1E2938; --rule-2:#182231;
+      --accent:#7FB4FF; --accent-2:#A5CCFF; --accent-soft:#13233C;
+      --safe:#4FD0AD; --safe-soft:#0F2A24;
+      --warn:#E7B160; --warn-soft:#2A2113;
+      --stop:#FF8880; --stop-soft:#2E1614;
+      --gold:#E5B84B;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.55);
+      --cell-bg:#0C1220;
+      --gl-membrane:#17223a; --gl-rim:#4d8ff0; --gl-bare:#4a5a76;
+      --gl-sens:#7FB4FF; --gl-cross:#F5C851; --gl-allergen:#48E5BC; --gl-granule:#FF9470;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0A0F18; --surface:#101724; --surface-2:#16202F; --sunken:#0C1220;
+    --ink:#F6F9FC; --ink-2:#D2DCE8; --ink-3:#A2B0C2;
+    --rule:#1E2938; --rule-2:#182231;
+    --accent:#7FB4FF; --accent-2:#A5CCFF; --accent-soft:#13233C;
+    --safe:#4FD0AD; --safe-soft:#0F2A24;
+    --warn:#E7B160; --warn-soft:#2A2113;
+    --stop:#FF8880; --stop-soft:#2E1614;
+    --gold:#E5B84B;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.55);
+    --cell-bg:#0C1220;
+    --gl-membrane:#17223a; --gl-rim:#4d8ff0; --gl-bare:#4a5a76;
+    --gl-sens:#7FB4FF; --gl-cross:#F5C851; --gl-allergen:#48E5BC; --gl-granule:#FF9470;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    background:var(--paper);color:var(--ink);font-family:var(--f);
+    font-size:15px;line-height:1.65;font-weight:400;
+    -webkit-font-smoothing:antialiased;min-height:100vh;
+  }
+  ::selection{background:var(--accent-soft);color:var(--accent);}
+
+  /* ---------- shell ---------- */
+  .topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--rule);}
+  .topbar-in{max-width:1340px;margin-inline:auto;padding:.85rem clamp(1rem,3vw,2rem) .4rem;display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;}
+  .brand{display:flex;align-items:baseline;gap:.55rem;margin-inline-end:auto;}
+  .brand h1{font-size:1.15rem;font-weight:700;letter-spacing:-.02em;line-height:1;}
+  .brand .sub{font-size:.74rem;color:var(--ink-3);font-weight:400;}
+  .status{display:flex;gap:.4rem;flex-wrap:wrap;}
+  .pill{font-family:var(--f-mono);font-size:.67rem;font-weight:500;padding:.3em .65em;border-radius:100px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap;}
+  .pill.on{background:var(--safe-soft);color:var(--safe);}
+  .pill.off{background:var(--warn-soft);color:var(--warn);}
+
+  nav{max-width:1340px;margin-inline:auto;padding:0 clamp(1rem,3vw,2rem);display:flex;gap:.1rem;overflow-x:auto;scrollbar-width:none;}
+  nav::-webkit-scrollbar{display:none;}
+  nav button{font-family:var(--f);font-size:.88rem;font-weight:600;color:var(--ink-3);background:none;border:0;border-bottom:2px solid transparent;padding:.55rem .8rem .7rem;cursor:pointer;white-space:nowrap;transition:color .15s;}
+  nav button:hover{color:var(--ink-2);}
+  nav button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);}
+  nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-4px;border-radius:4px;}
+
+  main{max-width:1340px;margin-inline:auto;padding:1.4rem clamp(1rem,3vw,2rem) 5rem;}
+  .panel[hidden]{display:none;}
+
+  .cols{display:grid;gap:1.1rem;grid-template-columns:minmax(0,20rem) minmax(0,1fr);align-items:start;}
+  .stack{display:flex;flex-direction:column;gap:1.1rem;min-width:0;}
+  /* Collapsed to one column the two stacks would run end to end, putting the
+     whole treatment panel between the patient and the cell. `display:contents`
+     dissolves them so the cards interleave by their own order instead. The same
+     order values also give the right sequence inside each stack on desktop. */
+  @media (max-width:1000px){
+    .cols{grid-template-columns:1fr;}
+    .cols > .stack{display:contents;}
+  }
+
+  .card{background:var(--surface);border-radius:14px;padding:1.3rem 1.4rem 1.45rem;box-shadow:var(--shadow);}
+  .card > h2{font-size:1rem;font-weight:700;letter-spacing:-.01em;margin-bottom:.2rem;}
+  .card > .hint{color:var(--ink-2);font-size:.82rem;line-height:1.6;margin-bottom:1.1rem;font-weight:400;}
+  .card > .hint:last-child{margin-bottom:0;}
+
+  /* ---------- controls ---------- */
+  .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:1.2rem;}
+  .chip{font-family:var(--f);font-size:.79rem;font-weight:600;padding:.34em .8em;border-radius:100px;cursor:pointer;background:var(--surface-2);color:var(--ink-2);border:0;transition:background .15s,color .15s;}
+  .chip:hover{background:var(--rule);}
+  .chip[aria-pressed="true"]{background:var(--accent);color:#fff;}
+  .chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .field{margin-bottom:1.15rem;}
+  .field:last-child{margin-bottom:0;}
+  .field-top{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;margin-bottom:.35rem;}
+  .field-top label{font-size:.83rem;font-weight:600;color:var(--ink-2);}
+  .field-top .val{font-family:var(--f-mono);font-size:.84rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--accent);direction:ltr;}
+  .field .sub{font-size:.74rem;color:var(--ink-2);margin-top:.35rem;line-height:1.55;font-weight:400;}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;cursor:pointer;direction:ltr;display:block;}
+  input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:3px;background:var(--rule);}
+  input[type=range]::-moz-range-track{height:3px;border-radius:3px;background:var(--rule);}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);margin-top:-5.5px;border:0;transition:transform .12s;}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:0;}
+  input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.18);}
+  input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:5px;border-radius:6px;}
+  input[type=range]:disabled{opacity:.35;cursor:not-allowed;}
+
+  input[type=text],textarea,select{font-family:var(--f);font-size:.87rem;color:var(--ink);background:var(--surface-2);border:1px solid transparent;border-radius:9px;padding:.5rem .7rem;width:100%;}
+  textarea{resize:vertical;min-height:4.8rem;line-height:1.6;}
+  input[type=text]:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);background:var(--surface);}
+  label.inline{display:flex;align-items:center;gap:.5rem;font-size:.83rem;font-weight:600;color:var(--ink-2);cursor:pointer;}
+  input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex:none;}
+
+  button.btn{font-family:var(--f);font-size:.86rem;font-weight:700;cursor:pointer;padding:.52rem 1.1rem;border-radius:9px;border:0;background:var(--accent);color:#fff;transition:opacity .15s;}
+  button.btn:hover{opacity:.88;}
+  button.btn.ghost{background:var(--accent-soft);color:var(--accent);}
+  button.btn.quiet{background:var(--surface-2);color:var(--ink-2);}
+  button.btn:disabled{opacity:.4;cursor:not-allowed;}
+  button.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .row{display:flex;gap:.55rem;flex-wrap:wrap;align-items:center;}
+
+  /* ---------- 3D cell ---------- */
+  .cell-wrap{position:relative;border-radius:12px;overflow:hidden;background:var(--cell-bg);}
+  #cell-canvas{display:block;width:100%;height:clamp(280px,42vh,440px);cursor:grab;}
+  #cell-canvas:active{cursor:grabbing;}
+  .cell-hud{position:absolute;inset-inline-start:0;top:0;padding:.85rem 1rem;pointer-events:none;}
+  .cell-hud .big{font-family:var(--f-mono);font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;direction:ltr;}
+  .cell-hud .cap{font-size:.7rem;color:var(--ink-2);margin-top:.2rem;font-weight:400;}
+  .cell-hint{position:absolute;inset-inline-end:0;bottom:0;padding:.7rem .95rem;font-size:.7rem;color:var(--ink-3);pointer-events:none;font-weight:400;}
+  .cell-fallback{padding:2.5rem 1.5rem;text-align:center;color:var(--ink-3);font-size:.86rem;}
+  .legend3d{display:flex;flex-wrap:wrap;gap:.4rem .95rem;margin-top:.85rem;}
+  .legend3d span{display:inline-flex;align-items:center;gap:.4rem;font-size:.76rem;color:var(--ink-2);}
+  .legend3d i{width:9px;height:9px;border-radius:50%;flex:none;}
+  .narrative{margin-top:.9rem;padding:.85rem 1rem;background:var(--surface-2);border-radius:10px;font-size:.85rem;line-height:1.65;color:var(--ink-2);}
+  .narrative b{color:var(--ink);font-weight:600;}
+
+  /* ---------- verdict ---------- */
+  .verdict{border-radius:12px;padding:1.05rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+  .verdict .word{font-size:1.35rem;font-weight:700;line-height:1.15;letter-spacing:-.01em;}
+  .verdict .why{font-size:.82rem;opacity:.85;margin-top:.15rem;font-weight:400;}
+  .verdict .score{font-family:var(--f-mono);font-size:2rem;font-weight:600;font-variant-numeric:tabular-nums;direction:ltr;line-height:1;}
+  .verdict .score small{font-size:.85rem;font-weight:400;opacity:.6;}
+  .v-safe{background:var(--safe-soft);color:var(--safe);}
+  .v-caution{background:var(--warn-soft);color:var(--warn);}
+  .v-danger{background:var(--stop-soft);color:var(--stop);}
+
+  /* ---------- metrics ---------- */
+  .metrics{display:grid;gap:.65rem;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:1.1rem;}
+  @media (max-width:760px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  @media (max-width:430px){.metrics{grid-template-columns:1fr;}}
+  .metric{background:var(--surface-2);border-radius:11px;padding:.8rem .9rem .85rem;}
+  .metric .k{font-size:.71rem;color:var(--ink-3);display:block;margin-bottom:.3rem;font-weight:600;}
+  .metric .v{font-family:var(--f-mono);font-size:1.25rem;font-weight:600;font-variant-numeric:tabular-nums;direction:ltr;text-align:right;display:block;line-height:1.1;}
+  .metric .u{font-size:.68rem;font-weight:400;color:var(--ink-3);}
+  .metric .why{font-size:.71rem;color:var(--ink-2);line-height:1.5;margin-top:.4rem;font-weight:400;}
+
+  /* Height comes from CSS, not a width/height attribute, so the canvas can
+     respond to the viewport. app.js reads clientHeight and re-rasterises. */
+  canvas.chart{display:block;width:100%;border-radius:10px;background:var(--surface-2);touch-action:pan-y;}
+  #chart-hist{height:clamp(130px,17vh,190px);}
+  #chart-dose{height:clamp(170px,26vh,300px);}
+  .chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap;margin-bottom:.6rem;}
+  .chart-head strong{font-size:.85rem;font-weight:600;}
+  .legend{display:flex;gap:.85rem;flex-wrap:wrap;font-size:.73rem;color:var(--ink-2);}
+  .legend i{display:inline-block;width:12px;height:2.5px;border-radius:2px;margin-inline-end:.32rem;vertical-align:middle;}
+  .chart-wrap{position:relative;}
+  .chart-readout{
+    position:absolute;top:.5rem;inset-inline-start:.6rem;pointer-events:none;
+    background:var(--surface);border-radius:8px;padding:.4rem .6rem;
+    font-family:var(--f-mono);font-size:.72rem;line-height:1.5;color:var(--ink);
+    box-shadow:var(--shadow);opacity:0;transition:opacity .12s;white-space:nowrap;
+  }
+  .chart-readout.show{opacity:1;}
+  .chart-readout b{color:var(--accent);font-weight:600;}
+
+  /* ---------- levers ---------- */
+  .lever{border-top:1px solid var(--rule-2);padding-top:.95rem;margin-top:.95rem;}
+  .lever:first-of-type{border-top:0;padding-top:0;margin-top:0;}
+  .lever-head{display:flex;align-items:center;gap:.5rem;}
+  .lever-head label{font-weight:700;font-size:.87rem;cursor:pointer;}
+  .lever .mech{font-size:.75rem;color:var(--ink-2);line-height:1.55;margin:.15rem 0 .65rem;padding-inline-start:1.5rem;font-weight:400;}
+  .lever .controls{padding-inline-start:1.5rem;}
+  .lever[data-on="false"] .controls{opacity:.32;}
+
+  /* ---------- shift ---------- */
+  .shift{display:grid;grid-template-columns:1fr auto 1fr;gap:.8rem;align-items:center;background:var(--surface-2);border-radius:11px;padding:1rem;margin-bottom:1rem;}
+  .shift .side{text-align:center;min-width:0;}
+  .shift .side .k{font-size:.7rem;color:var(--ink-3);display:block;margin-bottom:.25rem;font-weight:600;}
+  .shift .side .v{font-family:var(--f-mono);font-size:1.3rem;font-weight:600;font-variant-numeric:tabular-nums;direction:ltr;display:block;line-height:1.15;}
+  .shift .side .sub{font-size:.71rem;color:var(--ink-2);margin-top:.2rem;font-weight:400;}
+  .shift .arrow{font-family:var(--f-mono);font-size:1rem;color:var(--accent);font-weight:600;direction:ltr;text-align:center;}
+  .shift .arrow small{display:block;font-size:.67rem;color:var(--ink-3);font-weight:400;margin-top:.12rem;}
+
+  .badge{display:inline-block;font-family:var(--f-mono);font-size:.65rem;font-weight:600;padding:.22em .55em;border-radius:5px;}
+  .b-safe{background:var(--safe-soft);color:var(--safe);}
+  .b-danger{background:var(--stop-soft);color:var(--stop);}
+  .b-accent{background:var(--accent-soft);color:var(--accent);}
+  .b-warn{background:var(--warn-soft);color:var(--warn);}
+
+  /* ---------- tables ---------- */
+  .scroller{overflow-x:auto;border-radius:10px;}
+  table{border-collapse:collapse;width:100%;font-size:.82rem;}
+  th,td{text-align:right;padding:.55rem .75rem;vertical-align:top;}
+  thead th{font-size:.69rem;color:var(--ink-3);font-weight:600;background:var(--surface-2);white-space:nowrap;}
+  thead th:first-child{border-start-start-radius:8px;}
+  thead th:last-child{border-start-end-radius:8px;}
+  tbody td{border-bottom:1px solid var(--rule-2);}
+  tbody tr:last-child td{border-bottom:0;}
+  tbody tr:hover td{background:var(--surface-2);}
+  td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;direction:ltr;text-align:right;}
+  td.src{color:var(--ink-2);font-size:.75rem;font-weight:400;}
+  .empty{padding:2.2rem 1rem;text-align:center;color:var(--ink-2);font-size:.86rem;font-weight:400;}
+
+  /* ---------- agent timeline ---------- */
+  .timeline{display:flex;flex-direction:column;margin:.3rem 0 .5rem;}
+  .step{display:grid;grid-template-columns:1.3rem 1fr;gap:.7rem;padding:.45rem 0;align-items:start;}
+  .step .dot{width:9px;height:9px;border-radius:50%;background:var(--rule);margin-top:.45rem;justify-self:center;position:relative;flex:none;}
+  .step .dot::after{content:"";position:absolute;top:11px;right:50%;transform:translateX(50%);width:1px;height:calc(100% + .5rem);background:var(--rule);}
+  .step:last-child .dot::after{display:none;}
+  .step[data-state="run"] .dot{background:var(--accent);animation:pulse 1.2s ease-in-out infinite;}
+  .step[data-state="done"] .dot{background:var(--safe);}
+  .step[data-state="fail"] .dot{background:var(--warn);}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
+  @media (prefers-reduced-motion:reduce){.step[data-state="run"] .dot{animation:none}}
+  .step .label{font-weight:600;font-size:.85rem;}
+  .step .detail{font-size:.76rem;color:var(--ink-2);margin-top:.1rem;line-height:1.5;font-weight:400;}
+
+  .review{border-radius:12px;padding:1rem 1.15rem;background:var(--surface);box-shadow:var(--shadow);margin-bottom:.75rem;}
+  .review .who{display:flex;justify-content:space-between;align-items:baseline;gap:.7rem;flex-wrap:wrap;margin-bottom:.45rem;}
+  .review .who strong{font-size:.92rem;font-weight:700;}
+  .review .who .via{font-family:var(--f-mono);font-size:.68rem;color:var(--ink-3);}
+  .review .text{font-size:.86rem;line-height:1.7;color:var(--ink-2);white-space:pre-wrap;font-weight:400;}
+  .review .guard{margin-top:.6rem;}
+  .verdict-box{border-radius:11px;padding:1.05rem 1.2rem;background:var(--accent-soft);}
+  .verdict-box .text{font-size:.88rem;line-height:1.75;white-space:pre-wrap;color:var(--ink);font-weight:400;}
+
+  .note{background:var(--surface-2);border-radius:11px;padding:.9rem 1.05rem;font-size:.8rem;color:var(--ink-2);line-height:1.65;font-weight:400;}
+  .note b{color:var(--ink);font-weight:600;}
+  .warn{background:var(--warn-soft);border-radius:11px;padding:.9rem 1.05rem;font-size:.82rem;color:var(--ink-2);line-height:1.6;font-weight:400;}
+  .warn b{color:var(--warn);font-weight:600;}
+  .err{background:var(--stop-soft);border-radius:11px;padding:.9rem 1.05rem;font-size:.82rem;color:var(--stop);}
+
+  footer{max-width:1340px;margin:2.5rem auto 0;padding:1.3rem clamp(1rem,3vw,2rem);border-top:1px solid var(--rule);color:var(--ink-3);font-size:.78rem;line-height:1.7;font-weight:400;}
+  footer b{color:var(--ink-2);font-weight:600;}
+  .toast{position:fixed;bottom:1.3rem;inset-inline-start:1.3rem;z-index:80;background:var(--ink);color:var(--paper);padding:.6rem 1.05rem;border-radius:9px;font-size:.84rem;font-weight:600;box-shadow:var(--shadow);opacity:0;transform:translateY(6px);transition:opacity .18s,transform .18s;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  /* ---------- guided tour ---------- */
+  .help-btn{width:26px;height:26px;border-radius:50%;border:0;cursor:pointer;background:var(--surface-2);color:var(--ink-2);font-family:var(--f);font-size:.85rem;font-weight:700;line-height:1;flex:none;}
+  .help-btn:hover{background:var(--accent);color:#fff;}
+  .help-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .tour-root{position:fixed;inset:0;z-index:100;}
+  .tour-veil{position:absolute;inset:0;background:rgba(6,12,22,.62);}
+  .tour-ring{position:absolute;border-radius:12px;box-shadow:0 0 0 9999px rgba(6,12,22,.62);pointer-events:none;transition:top .22s,left .22s,width .22s,height .22s;border:2px solid var(--accent);}
+  .tour-ring[hidden]{display:none;}
+  .tour-card{position:absolute;max-width:26rem;width:calc(100vw - 2rem);background:var(--surface);border-radius:14px;padding:1.2rem 1.35rem 1.1rem;box-shadow:0 20px 60px -20px rgba(0,0,0,.5);}
+  .tour-card.centred{top:50%;left:50%;transform:translate(-50%,-50%);}
+  .tour-card .tour-count{font-family:var(--f-mono);font-size:.68rem;color:var(--ink-3);margin-bottom:.5rem;}
+  .tour-card h3{font-size:1.12rem;font-weight:700;margin-bottom:.5rem;letter-spacing:-.01em;}
+  .tour-card p{font-size:.87rem;line-height:1.7;color:var(--ink-2);white-space:pre-line;margin-bottom:1.1rem;}
+  .tour-actions{display:flex;gap:.5rem;align-items:center;}
+  @media (prefers-reduced-motion:reduce){.tour-ring{transition:none;}}
+</style>
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <h1>מעבדת תיקון</h1>
+      <span class="sub">אלרגיה לחלב פרה</span>
+    </div>
+    <div class="status" id="status"></div>
+    <button class="help-btn" id="help" title="הדרכה — מה כל דבר עושה" aria-label="הדרכה">?</button>
+  </div>
+  <nav id="nav" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="bench">שולחן העבודה</button>
+    <button role="tab" aria-selected="false" data-tab="agents">צבא הסוכנים</button>
+    <button role="tab" aria-selected="false" data-tab="log">יומן ניסויים</button>
+    <button role="tab" aria-selected="false" data-tab="params">פרמטרים ומקורות</button>
+  </nav>
+</div>
+
+<main>
+
+<!-- ============================ BENCH ============================ -->
+<section class="panel" id="panel-bench">
+  <div class="cols">
+    <div class="stack">
+
+      <div class="card" style="order:1">
+        <h2>המטופל</h2>
+        <p class="hint">שני המספרים הראשונים הם מה שכתוב בדוח מעבדה אמיתי. הם קובעים כמה קולטנים על תא הפיטום נושאים נוגדן שמזהה חלב — וזה מה שקובע הכול.</p>
+        <div class="chips" id="chips" role="group" aria-label="בחירת מטופל"></div>
+        <div class="field">
+          <div class="field-top"><label for="sige">IgE ספציפי לחלב</label><span class="val" id="sige-v"></span></div>
+          <input type="range" id="sige" min="0" max="100" value="50">
+          <div class="sub" id="sige-note"></div>
+        </div>
+        <div class="field">
+          <div class="field-top"><label for="tige">IgE כללי</label><span class="val" id="tige-v"></span></div>
+          <input type="range" id="tige" min="0" max="100" value="50">
+          <div class="sub">אותו טיטר ספציפי מדולל על פני יותר קולטנים. לכן IgE כללי גבוה דווקא מגן.</div>
+        </div>
+        <div class="field">
+          <div class="field-top"><label for="barrier">חדירות המחסום הרירי</label><span class="val" id="barrier-v"></span></div>
+          <input type="range" id="barrier" min="0" max="100" value="30">
+          <div class="sub">כמה אלרגן שלם חוצה את דופן המעי. מאמץ, חום ו-NSAIDs מעלים את זה ומורידים את הסף פי כמה.</div>
+        </div>
+      </div>
+
+      <div class="card" style="order:5">
+        <h2>טיפול</h2>
+        <p class="hint">חמישה מנגנונים מתועדים. זה בדיוק אוצר המילים שסוכן ה-AI רשאי לבחור ממנו — הוא לא יכול להמציא טיפול שלא נמצא כאן.</p>
+        <div id="levers"></div>
+      </div>
+
+    </div>
+
+    <div class="stack">
+
+      <div class="card" style="order:2">
+        <h2>תא הפיטום</h2>
+        <p class="hint">מה שקורה על פני התא ברגע זה, מחושב מהמספרים של המנוע. גרור כדי לסובב.</p>
+
+        <div class="cell-wrap">
+          <canvas id="cell-canvas"></canvas>
+          <div class="cell-hud">
+            <div class="big" id="cell-big"></div>
+            <div class="cap" id="cell-cap">קישורים צולבים לתא</div>
+          </div>
+          <div class="cell-hint">גרור לסיבוב</div>
+        </div>
+
+        <div class="legend3d">
+          <span><i style="background:var(--gl-bare)"></i>קולטן פנוי</span>
+          <span><i style="background:var(--gl-sens)"></i>קולטן נושא IgE לחלב</span>
+          <span><i style="background:var(--gl-cross)"></i>קושר צולב — אלרגן גישר בין שניים</span>
+          <span><i style="background:var(--gl-allergen)"></i>חלבון חלב</span>
+          <span><i style="background:var(--gl-granule)"></i>היסטמין משתחרר</span>
+        </div>
+
+        <p class="hint" style="margin:.65rem 0 0">על תא פיטום אמיתי יש כרבע מיליון קולטנים. התצוגה מראה מדגם מהם, ורק אחוזים בודדים נושאים נוגדן לחלב. הקושרים הצולבים מוגדלים בכוונה — הם באמת נדירים, וזו בדיוק הנקודה: מספיקים כמאה מהם כדי להפעיל תא שלם.</p>
+
+        <div class="narrative" id="cell-narrative"></div>
+      </div>
+
+      <div class="card" style="order:3">
+        <h2>אתגר מזון</h2>
+        <p class="hint">מנה אחת של חלבון חלב. המנוע מריץ ספיגה דרך המעי, קישור צולב, דגרנולציה ופינוי היסטמין לאורך שעתיים.</p>
+        <div class="field">
+          <div class="field-top"><label for="dose">מינון</label><span class="val" id="dose-v"></span></div>
+          <input type="range" id="dose" min="0" max="100" value="55">
+          <div class="sub" id="dose-note"></div>
+        </div>
+
+        <div class="verdict" id="verdict">
+          <div><div class="word" id="verdict-word"></div><div class="why" id="verdict-why"></div></div>
+          <div class="score" id="verdict-score"></div>
+        </div>
+
+        <div class="metrics" id="metrics"></div>
+
+        <div style="margin-top:1.3rem">
+          <div class="chart-head">
+            <strong>היסטמין בפלזמה לאורך זמן</strong>
+            <div class="legend">
+              <span><i style="background:var(--accent)"></i>עם טיפול</span>
+              <span><i style="background:var(--ink-3)"></i>ללא טיפול</span>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas class="chart" id="chart-hist"></canvas></div>
+          <p class="hint" style="margin:.55rem 0 0">הקו המקווקו הוא הרמה שבה מופיעים סימפטומים אובייקטיביים. העלייה מתחילה דקות אחרי הבליעה, כי האלרגן צריך קודם לעבור את הקיבה.</p>
+        </div>
+
+        <div class="row" style="margin-top:1.2rem">
+          <button class="btn ghost" id="save-exp">שמור ליומן הניסויים</button>
+          <span style="font-size:.77rem;color:var(--ink-3)" id="save-hint"></span>
+        </div>
+      </div>
+
+      <div class="card" style="order:4">
+        <h2>עקומת מינון־תגובה</h2>
+        <p class="hint">הסף המעורר הוא המינון הקטן ביותר שמייצר סימפטומים אובייקטיביים. זה המדד שניסויי אימונותרפיה מדווחים, וזה מה שטיפול מנסה להזיז.</p>
+        <div class="shift" id="shift"></div>
+        <div class="chart-head"><div class="legend">
+          <span><i style="background:var(--accent)"></i>עם טיפול</span>
+          <span><i style="background:var(--ink-3)"></i>ללא טיפול</span>
+          <span><i style="background:var(--stop)"></i>סף התגובה</span>
+        </div></div>
+        <div class="chart-wrap">
+          <canvas class="chart" id="chart-dose"></canvas>
+          <div class="chart-readout" id="dose-readout"></div>
+        </div>
+        <p class="hint" style="margin:.55rem 0 0">העבר את העכבר או האצבע על העקומה כדי לקרוא כל נקודה. הקו האדום הוא סף התגובה — כל מה שמעליו הוא תגובה קלינית.</p>
+      </div>
+
+      <div class="card" style="order:6">
+        <h2>השוואת פרוטוקולים</h2>
+        <p class="hint">חמישה פרוטוקולים אמיתיים, מחושבים מחדש עבור המטופל שבחרת.</p>
+        <div class="scroller"><table id="protocols">
+          <thead><tr><th>פרוטוקול</th><th>סף אחרי</th><th>הסטה</th><th>IgG4</th><th>מגן מכוס</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+
+      <div class="warn" id="limits" style="order:7"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ AGENTS ============================ -->
+<section class="panel" id="panel-agents" hidden>
+  <div class="cols">
+    <div class="stack">
+      <div class="card">
+        <h2>הרצת צבא הסוכנים</h2>
+        <p class="hint">חוקר ראשי מתכנן פרוטוקולים, המנוע מריץ אותם, שלושה מומחים קוראים את הפלט במקביל, ומבקר מדרג. שתיים עד שלוש דקות.</p>
+
+        <div class="field">
+          <div class="field-top"><label for="goal">המטרה</label></div>
+          <textarea id="goal">העלה את הסף של המטופל מספיק כדי שחשיפה מקרית לביס של מאכל שמכיל חלב תהיה בטוחה</textarea>
+        </div>
+
+        <div class="field">
+          <div class="field-top"><label for="count">כמה פרוטוקולים להציע</label><span class="val" id="count-v">4</span></div>
+          <input type="range" id="count" min="2" max="6" step="1" value="4">
+        </div>
+
+        <div class="field">
+          <div class="field-top"><label for="pi-model">מודל החוקר הראשי</label></div>
+          <select id="pi-model"></select>
+          <div class="sub">מתכנן את הפרוטוקולים — שווה מודל חזק.</div>
+        </div>
+        <div class="field">
+          <div class="field-top"><label for="review-model">מודל המומחים</label></div>
+          <select id="review-model"></select>
+        </div>
+        <div class="field">
+          <div class="field-top"><label for="judge-model">מודל המבקר</label></div>
+          <select id="judge-model"></select>
+        </div>
+
+        <label class="inline" style="margin-bottom:1rem">
+          <input type="checkbox" id="offline"> הרצה offline — פאנל מובנה, בלי מודלים
+        </label>
+
+        <div class="row">
+          <button class="btn" id="run-agents">הרץ</button>
+          <button class="btn quiet" id="stop-agents" disabled>עצור</button>
+        </div>
+        <p class="hint" style="margin:.8rem 0 0" id="agent-patient"></p>
+      </div>
+
+      <div class="note">
+        <b>למה אי אפשר לרמות כאן.</b> סוכן לא יכול להחזיר מספר. הוא בוחר התערבות מרשימה סגורה, המנוע מחשב מה היא עושה, וכל מספר שמופיע בטקסט של סוכן נבדק מול פלט המנוע. מה שלא ניתן לייחוס — מסומן באדום.
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <h2>מהלך הריצה</h2>
+        <div class="timeline" id="timeline"></div>
+        <div id="agent-error"></div>
+      </div>
+
+      <div class="card" id="agent-results" hidden>
+        <h2>פרוטוקולים שהמנוע הריץ</h2>
+        <p class="hint">מדורג לפי הסטת הסף. המספרים האלה מגיעים מהמנוע, לא מהסוכן שהציע אותם.</p>
+        <div class="scroller"><table id="agent-protocols">
+          <thead><tr><th>פרוטוקול</th><th>מנופים</th><th>סף אחרי</th><th>הסטה</th><th>מגן מכוס</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+
+      <div id="agent-optimised"></div>
+      <div id="agent-reviews"></div>
+      <div id="agent-verdict"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ LOG ============================ -->
+<section class="panel" id="panel-log" hidden>
+  <div class="card">
+    <h2>יומן ניסויים</h2>
+    <p class="hint">כל ריצה ששמרת נכתבת לקובץ בפרויקט. אפשר לטעון ריצה בחזרה לשולחן העבודה ולהמשיך ממנה.</p>
+    <div class="row" style="margin-bottom:1.1rem">
+      <button class="btn quiet" id="refresh-log">רענן</button>
+      <button class="btn quiet" id="clear-log">מחק הכול</button>
+      <span style="font-size:.79rem;color:var(--ink-3)" id="log-count"></span>
+    </div>
+    <div class="scroller"><table id="log-table">
+      <thead><tr><th>מתי</th><th>הערה</th><th>מטופל</th><th>טיפול</th><th>סף</th><th>הסטה</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ============================ PARAMS ============================ -->
+<section class="panel" id="panel-params" hidden>
+  <div class="card">
+    <h2>מקור כל פרמטר</h2>
+    <p class="hint">מספר שווה משהו רק אם אפשר להגיד מאיפה הוא.
+      <span class="badge b-accent">measured</span> דווח ישירות בניסוי המצוטט ·
+      <span class="badge b-warn">calibrated</span> הותאם כדי לשחזר תוצאה קלינית מפורסמת ·
+      <span class="badge b-danger">assumed</span> בחירת מידול בלי מדידה מאחוריה.
+    </p>
+    <div class="row" style="margin-bottom:1rem">
+      <input type="text" id="param-filter" placeholder="סנן לפי שם, סיווג או ציטוט…" style="max-width:26rem">
+    </div>
+    <div class="scroller"><table id="params-table">
+      <thead><tr><th>פרמטר</th><th>ערך</th><th>יחידה</th><th>סיווג</th><th>ציטוט</th><th>הערה</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <b>מה זה לא.</b> הסף המעורר כאן מסומלץ, לא נמדד — מטופל אמיתי עלול להיות שונה בסדר גודל. המודל לא כולל מתווכים מלבד היסטמין, לא מפריד בין קזאין למי גבינה, ולא מדמה טעויות מינון או קו־פקטורים משתנים. אין להסיק מכאן שום החלטה קלינית.
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+globalThis.__STANDALONE__ = true;
+globalThis.__PROVENANCE__ = [{"name": "blg_mw", "value": 18300, "unit": "g/mol", "provenance": "measured", "source": "Brownlow et al. 1997, Structure 5:481", "note": "Bovine beta-lactoglobulin monomer."}, {"name": "blg_fraction", "value": 0.1, "unit": "g/g", "provenance": "measured", "source": "Fox & McSweeney 1998, Dairy Chemistry and Biochemistry", "note": "BLG is ~3.2 g/L of the ~33 g/L total protein in cow's milk."}, {"name": "k_bind", "value": 30000000.0, "unit": "1/M", "provenance": "measured", "source": "Christensen et al. 2008, J Biol Chem 283:29543", "note": "Allergen-specific IgE Fab affinity, KD ~33 nM, inside the 1-100 nM range reported for food-allergen-specific IgE. This value also fixes where the prozone sits, at 1/(2*k_bind) = 17 nM, and so how much of the clinical dose range stays on the ascending limb."}, {"name": "k_cross", "value": 0.00022, "unit": "cell/receptor", "provenance": "calibrated", "source": "fitted to VITAL ED05 = 0.2 mg milk protein", "note": "Surface crosslinking constant. Kx*R_total ~5, the physically expected order (Perelson & DeLisi 1980, Math Biosci 48:71)."}, {"name": "receptors_per_cell", "value": 240000.0, "unit": "receptors/cell", "provenance": "measured", "source": "Malveaux et al. 1978, J Clin Invest 62:176", "note": "FcepsilonRI per human basophil/mast cell; reported range 1e5-5e5."}, {"name": "k_occupancy_ku", "value": 120.0, "unit": "kU/L", "provenance": "calibrated", "source": "fitted to FcepsilonRI occupancy vs serum IgE", "note": "Total IgE at which FcepsilonRI is half-occupied. Receptor number itself is IgE-regulated (MacGlashan 1997, J Immunol 158:1438), lumped in here."}, {"name": "crosslink_threshold", "value": 100.0, "unit": "crosslinks/cell", "provenance": "measured", "source": "Fewtrell & Metzger 1980, J Immunol 125:701", "note": "Roughly 100 receptor dimers suffice to trigger degranulation. Held fixed rather than fitted: it is degenerate with mucosal_cmax, since crosslink count only ever enters as a ratio against this threshold, and mucosal_cmax absorbs the scale."}, {"name": "crosslink_hill", "value": 2.0, "unit": "-", "provenance": "assumed", "source": "modelling choice", "note": "Cooperativity of the aggregation-to-degranulation step. Sweep this."}, {"name": "mucosal_cmax", "value": 6.89949e-08, "unit": "M", "provenance": "calibrated", "source": "fitted to the VITAL population ED50 for cow's milk (25 mg protein)", "note": "Saturating free BLG at the mucosal mast cell. Lumps epithelial permeability (P_app ~1e-7 cm/s for intact protein), exposed surface and local clearance into one number. Sits far below the crosslinking peak at 1/(2*k_bind) = 5 nM, which is why the clinical dose range stays on the ascending limb and the dose-response comes out monotone."}, {"name": "mucosal_km", "value": 5000.0, "unit": "mg protein", "provenance": "assumed", "source": "modelling choice", "note": "Dose at which mucosal transfer half-saturates. Deliberately placed above the clinical range so delivery stays near-linear in dose. An earlier version fitted this to 2.5 mg and the model then predicted that patients with milk-sIgE below ~10 kU/L could never react at any dose \u2014 saturation inside the clinical range removes the only lever a large dose has. Not fitted, because nothing here identifies it."}, {"name": "recruit_km", "value": 300.0, "unit": "mg protein", "provenance": "assumed", "source": "modelling choice", "note": "Dose at which half the mucosal mast cell pool is engaged \u2014 larger doses reach more gut surface rather than raising the local concentration. Not fitted: it is degenerate with histamine_yield, which absorbs the scale. Only its position relative to the clinical dose range matters."}, {"name": "absorption_tmax", "value": 600.0, "unit": "s", "provenance": "measured", "source": "Baumert et al. 2018, J Allergy Clin Immunol Pract 6:457", "note": "Time of peak arrival rate of intact food allergen at the mucosa, gated by gastric emptying and intestinal transit. Serum allergen is detectable about 10 min after ingestion, which is why food reactions begin minutes rather than seconds after a meal."}, {"name": "k_degranulate", "value": 0.012, "unit": "1/s", "provenance": "measured", "source": "Fewtrell & Metzger 1980, J Immunol 125:701", "note": "Degranulation is near-complete within 60-90 s of crosslinking."}, {"name": "histamine_yield", "value": 28.6331, "unit": "ng/mL", "provenance": "calibrated", "source": "fitted to Kaliner et al. 1982 severe-reaction plasma histamine", "note": "Plasma histamine if the entire mucosal mast cell pool degranulates. Lumps 3 pg histamine/cell, mast cell mass and tissue-to-plasma transfer into one number. Calibrated so a glass of milk in a typical patient peaks at 12 ng/mL, the measured severe-reaction level."}, {"name": "histamine_halflife", "value": 90.0, "unit": "s", "provenance": "measured", "source": "Beaven et al. 1972, Br J Pharmacol 44:283", "note": "Plasma histamine half-life, 1-2 min via diamine oxidase and HNMT."}, {"name": "histamine_baseline", "value": 0.5, "unit": "ng/mL", "provenance": "measured", "source": "Kaliner et al. 1982, JAMA 248:2534", "note": "Resting plasma histamine, reported 0.3-1.0 ng/mL."}, {"name": "symptom_ec50", "value": 4.0, "unit": "ng/mL", "provenance": "measured", "source": "Kaliner et al. 1982, JAMA 248:2534", "note": "Flushing at 1-2 ng/mL, tachycardia and GI symptoms at 3-5, severe >10."}, {"name": "symptom_hill", "value": 1.8, "unit": "-", "provenance": "calibrated", "source": "fitted to the Kaliner histamine-symptom series", "note": ""}, {"name": "symptom_max", "value": 10.0, "unit": "score", "provenance": "assumed", "source": "scale definition", "note": "Top of the 0-10 severity scale used throughout."}, {"name": "reaction_threshold", "value": 3.0, "unit": "score", "provenance": "measured", "source": "Sampson et al. 2012 PRACTALL, J Allergy Clin Immunol 130:1260", "note": "Objective symptoms \u2014 the point a food challenge is called positive."}, {"name": "local_weight", "value": 0.55, "unit": "-", "provenance": "assumed", "source": "modelling choice", "note": "Ceiling of the local/GI symptom channel as a fraction of the full scale. Mucosal degranulation drives vomiting and abdominal pain through enteric reflexes without systemic histamine, but on its own does not produce cardiovascular collapse \u2014 so it tops out above the objective-symptom threshold and below anaphylaxis."}, {"name": "k_igg4", "value": 10000000.0, "unit": "1/M", "provenance": "measured", "source": "Aalberse & Schuurman 2002, Immunology 105:9", "note": "Milk-specific IgG4 affinity, KD ~100 nM \u2014 about 10x weaker than IgE, which is why it only blocks once its concentration is far higher."}, {"name": "igg4_mw", "value": 146000, "unit": "g/mol", "provenance": "measured", "source": "Vidarsson et al. 2014, Front Immunol 5:520", "note": "IgG4 molecular weight, used to report titres in the mg/L units clinical labs actually issue."}, {"name": "igg4_baseline", "value": 2e-09, "unit": "M", "provenance": "measured", "source": "Savilahti et al. 2010, J Allergy Clin Immunol 125:1315", "note": "Milk-specific IgG4 before immunotherapy, ~0.3 mg/L."}, {"name": "igg4_halflife", "value": 21.0, "unit": "day", "provenance": "measured", "source": "Vidarsson et al. 2014, Front Immunol 5:520", "note": "Serum half-life of the IgG4 subclass."}, {"name": "igg4_kprod", "value": 1.8898e-08, "unit": "M/day", "provenance": "calibrated", "source": "fitted to the measured post-OIT milk-specific IgG4 titre of 60 mg/L", "note": "Maximal IgG4 production under sustained antigen exposure. Fitted against the measured titre rather than against the threshold shift, so that the split of protection between blocking antibody and Treg comes out of the model instead of being assumed by the calibration."}, {"name": "igg4_dose_km", "value": 120.0, "unit": "mg/day", "provenance": "calibrated", "source": "fitted to milk OIT maintenance dosing (Skripak 2008)", "note": "Daily dose at which IgG4 induction is half-maximal."}, {"name": "sige_halflife", "value": 2.5, "unit": "day", "provenance": "measured", "source": "Vidarsson et al. 2014, Front Immunol 5:520", "note": "Free serum IgE half-life. Receptor-bound IgE persists for weeks."}, {"name": "total_ige_ku", "value": 420.0, "unit": "kU/L", "provenance": "measured", "source": "Savilahti et al. 2010, J Allergy Clin Immunol 125:1315", "note": "Total serum IgE in a typical milk-allergic child on OIT entry."}, {"name": "treg_kind", "value": 0.0640061, "unit": "1/day", "provenance": "calibrated", "source": "fitted to the 100x eliciting-dose shift over 12 months of milk OIT", "note": "Induction rate of allergen-specific Treg under sustained exposure (Shreffler et al. 2009, J Allergy Clin Immunol 123:43). Fitted last, so it absorbs whatever protection the measured IgG4 titre does not explain."}, {"name": "treg_halflife", "value": 60.0, "unit": "day", "provenance": "calibrated", "source": "fitted to loss of desensitisation after OIT is stopped", "note": "Decay of induced tolerance once antigen exposure ends. This is why desensitisation is not the same as sustained unresponsiveness."}, {"name": "treg_dose_km", "value": 80.0, "unit": "mg/day", "provenance": "calibrated", "source": "fitted to milk OIT maintenance dosing", "note": ""}, {"name": "treg_suppression", "value": 0.75, "unit": "-", "provenance": "calibrated", "source": "fitted to the sIgE decline seen late in OIT", "note": "Maximum fractional suppression of IgE production by induced Treg."}];
+/* Tikkun Lab engine — JavaScript port of engine/ for the browser lab.
+ *
+ * The browser cannot call Python, so this reimplements the same equations. A port
+ * that drifts from the original is worse than no port: it would still produce
+ * confident numbers, just different ones. `verify.mjs` checks every value here
+ * against `fixture.json`, generated from the Python engine.
+ *
+ * Differences from the Python, both deliberate:
+ *   - fixed-step RK4 instead of SciPy's LSODA, so the browser needs no solver
+ *   - step sizes chosen to hold agreement inside 0.5% on every fixture value
+ *
+ * Everything else — the parameters, the equilibria, the symptom scale — is the
+ * same arithmetic in the same order.
+ */
+
+const LN2 = Math.log(2);
+
+const PARAMS = {
+  blg_mw: 18300,
+  blg_fraction: 0.10,
+  k_bind: 3.0e7,
+  k_cross: 2.2e-4,
+  receptors_per_cell: 2.4e5,
+  k_occupancy_ku: 120.0,
+  crosslink_threshold: 100.0,
+  crosslink_hill: 2.0,
+  mucosal_cmax: 6.89949e-8,
+  mucosal_km: 5000.0,
+  recruit_km: 300.0,
+  absorption_tmax: 600.0,
+  k_degranulate: 0.012,
+  histamine_yield: 28.6331,
+  histamine_halflife: 90.0,
+  histamine_baseline: 0.5,
+  symptom_ec50: 4.0,
+  symptom_hill: 1.8,
+  symptom_max: 10.0,
+  reaction_threshold: 3.0,
+  local_weight: 0.55,
+  k_igg4: 1.0e7,
+  igg4_mw: 146000,
+  igg4_baseline: 2.0e-9,
+  igg4_halflife: 21.0,
+  igg4_kprod: 1.8898e-8,
+  igg4_dose_km: 120.0,
+  sige_halflife: 2.5,
+  total_ige_ku: 420.0,
+  treg_kind: 0.0640061,
+  treg_halflife: 60.0,
+  treg_dose_km: 80.0,
+  treg_suppression: 0.75,
+};
+
+const PATIENTS = {
+  exquisite: { label: 'exquisite', specific_ige_ku: 100, total_ige_ku: 300, igg4_m: 2e-9, treg: 0, mucosal_barrier: 2.5 },
+  default: { label: 'default', specific_ige_ku: 15, total_ige_ku: 400, igg4_m: 2e-9, treg: 0, mucosal_barrier: 1.0 },
+  moderate: { label: 'moderate', specific_ige_ku: 5, total_ige_ku: 400, igg4_m: 2e-9, treg: 0, mucosal_barrier: 1.0 },
+  outgrowing: { label: 'outgrowing', specific_ige_ku: 1.2, total_ige_ku: 350, igg4_m: 2e-9, treg: 0, mucosal_barrier: 1.0 },
+};
+
+const GLASS_OF_MILK_MG = 8000;
+
+/* ---- binding equilibria ---- */
+
+function hill(x, half, coef) {
+  if (x <= 0) return 0;
+  const xn = Math.pow(x, coef);
+  return xn / (xn + Math.pow(half, coef));
+}
+
+/* Allergen still able to bridge two IgE after blocking IgG4 covers epitopes.
+ * Quadratic in coverage: crosslinking needs two free epitopes on one molecule,
+ * so covering 80% of epitopes removes 96% of bridging capacity. */
+function freeAllergen(totalM, igg4M, kIgg4) {
+  if (totalM <= 0) return 0;
+  if (kIgg4 <= 0 || igg4M <= 0) return totalM;
+  const occupancy = (kIgg4 * igg4M) / (1 + kIgg4 * igg4M);
+  return totalM * Math.pow(1 - occupancy, 2);
+}
+
+/* Dembo & Goldstein (1978) bivalent-ligand equilibrium, solved exactly.
+ *   R_total = S + 2*K1*C*S + 2*Kx*K1*C*S^2 */
+function crosslinks(concM, receptors, kBind, kCross) {
+  if (concM <= 0 || receptors <= 0 || kBind <= 0) return 0;
+  const kc = kBind * concM;
+  const a = 2 * kCross * kc;
+  const b = 1 + 2 * kc;
+  const free = a <= 0
+    ? receptors / b
+    : (-b + Math.sqrt(b * b + 4 * a * receptors)) / (2 * a);
+  return kCross * kc * free * free;
+}
+
+function sensitizedReceptors(specificKu, totalKu, perCell, kOccupancyKu) {
+  if (totalKu <= 0 || specificKu <= 0) return 0;
+  const occupancy = totalKu / (totalKu + kOccupancyKu);
+  const specificFraction = Math.min(1, specificKu / totalKu);
+  return perCell * occupancy * specificFraction;
+}
+
+/* ---- mucosal delivery ---- */
+
+function mucosalExposure(doseMg, p = PARAMS, barrier = 1) {
+  if (doseMg <= 0) return 0;
+  return barrier * p.mucosal_cmax * doseMg / (doseMg + p.mucosal_km);
+}
+
+function engagedMastCells(doseMg, p = PARAMS) {
+  if (doseMg <= 0) return 0;
+  return doseMg / (doseMg + p.recruit_km);
+}
+
+/* ---- fixed-step RK4 ---- */
+
+function rk4(deriv, y0, t0, t1, steps) {
+  const h = (t1 - t0) / steps;
+  let y = y0.slice();
+  let t = t0;
+  const trace = [[t, y.slice()]];
+  for (let i = 0; i < steps; i++) {
+    const k1 = deriv(t, y);
+    const k2 = deriv(t + h / 2, y.map((v, j) => v + (h / 2) * k1[j]));
+    const k3 = deriv(t + h / 2, y.map((v, j) => v + (h / 2) * k2[j]));
+    const k4 = deriv(t + h, y.map((v, j) => v + h * k3[j]));
+    y = y.map((v, j) => v + (h / 6) * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j]));
+    t += h;
+    trace.push([t, y.slice()]);
+  }
+  return trace;
+}
+
+/* ---- one oral food challenge ---- */
+
+function challenge(patient, doseMg, p = PARAMS, options = {}) {
+  const durationS = options.durationS ?? 7200;
+  const steps = options.steps ?? 900;   // 8 s per step; verified against SciPy
+
+  const plateau = mucosalExposure(doseMg, p, patient.mucosal_barrier ?? 1);
+  const freeM = freeAllergen(plateau, patient.igg4_m, p.k_igg4);
+  const receptors = sensitizedReceptors(
+    patient.specific_ige_ku, patient.total_ige_ku,
+    p.receptors_per_cell, p.k_occupancy_ku);
+  const x = crosslinks(freeM, receptors, p.k_bind, p.k_cross);
+  const activation = hill(x, p.crosslink_threshold, p.crosslink_hill);
+  const engaged = engagedMastCells(doseMg, p);
+
+  const kDeg = p.k_degranulate;
+  const kAbsorb = 1 / p.absorption_tmax;
+  const kClear = LN2 / p.histamine_halflife;
+  const baseline = p.histamine_baseline;
+
+  const deriv = (t, y) => {
+    const [degranulated, histamine] = y;
+    // Two sequential gut transit steps give an Erlang-2 arrival profile whose
+    // slope starts at zero, so nothing reaches the mast cells in the first
+    // moments. A single exponential fires within seconds of swallowing.
+    const xt = kAbsorb * t;
+    const arrived = plateau * (1 - (1 + xt) * Math.exp(-xt));
+    const bridgeable = freeAllergen(arrived, patient.igg4_m, p.k_igg4);
+    const active = hill(
+      crosslinks(bridgeable, receptors, p.k_bind, p.k_cross),
+      p.crosslink_threshold, p.crosslink_hill);
+    const flux = kDeg * active * Math.max(0, engaged - degranulated);
+    return [flux, p.histamine_yield * flux - kClear * (histamine - baseline)];
+  };
+
+  const trace = rk4(deriv, [0, baseline], 0, durationS, steps);
+
+  let peak = baseline;
+  let peakT = 0;
+  for (const [t, y] of trace) {
+    if (y[1] > peak) { peak = y[1]; peakT = t; }
+  }
+
+  const local = p.symptom_max * activation * p.local_weight;
+  const systemic = p.symptom_max * hill(peak, p.symptom_ec50, p.symptom_hill);
+  // Probabilistic OR: either channel alone can produce symptoms, and the two
+  // together saturate rather than summing past the top of the scale.
+  const combined = p.symptom_max
+    * (1 - (1 - local / p.symptom_max) * (1 - systemic / p.symptom_max));
+
+  return {
+    dose_mg: doseMg,
+    free_allergen_m: freeM,
+    crosslinks_per_cell: x,
+    activation,
+    engaged_fraction: engaged,
+    peak_histamine: peak,
+    time_to_peak_s: peakT,
+    local_score: local,
+    systemic_score: systemic,
+    symptom_score: combined,
+    reaction: combined >= p.reaction_threshold,
+    trace: options.keepTrace ? trace.map(([t, y]) => [t, y[1]]) : null,
+  };
+}
+
+/* ---- eliciting dose ---- */
+
+function elicitingDose(patient, p = PARAMS, loMg = 1e-5, hiMg = 1e5, tol = 1e-3) {
+  if (challenge(patient, loMg, p).reaction) return loMg;
+  if (!challenge(patient, hiMg, p).reaction) return Infinity;
+  let logLo = Math.log10(loMg);
+  let logHi = Math.log10(hiMg);
+  while (logHi - logLo > tol) {
+    const mid = (logLo + logHi) / 2;
+    if (challenge(patient, Math.pow(10, mid), p).reaction) logHi = mid;
+    else logLo = mid;
+  }
+  return Math.pow(10, logHi);
+}
+
+function doseResponse(patient, p = PARAMS, loMg = 1e-2, hiMg = 1e4, points = 60) {
+  const doses = [];
+  const scores = [];
+  const a = Math.log10(loMg);
+  const b = Math.log10(hiMg);
+  for (let i = 0; i < points; i++) {
+    const d = Math.pow(10, a + (b - a) * i / (points - 1));
+    doses.push(d);
+    scores.push(challenge(patient, d, p).symptom_score);
+  }
+  return { doses, scores };
+}
+
+/* ---- a course of oral immunotherapy ---- */
+
+function immunotherapy(patient, dailyDoseMg, days = 365, p = PARAMS, options = {}) {
+  const steps = options.steps ?? 1460;   // 6 h per step
+
+  const igg4Decay = LN2 / p.igg4_halflife;
+  const tregDecay = LN2 / p.treg_halflife;
+  const igeDecay = LN2 / p.sige_halflife;
+  // Resting production, or an untreated patient decays toward zero antibody
+  // instead of holding at their own baseline.
+  const igeProd = igeDecay * patient.specific_ige_ku;
+  const igg4ProdBaseline = igg4Decay * p.igg4_baseline;
+
+  const signalIgg4 = hill(dailyDoseMg, p.igg4_dose_km, 1);
+  const signalTreg = hill(dailyDoseMg, p.treg_dose_km, 1);
+
+  const deriv = (_t, y) => {
+    const [sige, igg4, treg] = y;
+    return [
+      igeProd * (1 - p.treg_suppression * treg) - igeDecay * sige,
+      igg4ProdBaseline + p.igg4_kprod * signalIgg4 - igg4Decay * igg4,
+      p.treg_kind * signalTreg * (1 - treg) - tregDecay * treg,
+    ];
+  };
+
+  const trace = rk4(deriv,
+    [patient.specific_ige_ku, patient.igg4_m, patient.treg ?? 0], 0, days, steps);
+  const [, last] = trace[trace.length - 1];
+
+  return {
+    days: trace.map(([t]) => t),
+    specific_ige_ku: trace.map(([, y]) => y[0]),
+    igg4_m: trace.map(([, y]) => y[1]),
+    treg: trace.map(([, y]) => y[2]),
+    final: {
+      ...patient,
+      label: `${patient.label}+OIT`,
+      specific_ige_ku: last[0],
+      igg4_m: last[1],
+      treg: last[2],
+    },
+  };
+}
+
+/* ---- interventions: the same closed vocabulary the agents use ---- */
+
+const LEVERS = {
+  oral_immunotherapy: { fields: { daily_dose_mg: [0.1, 5000], days: [7, 1095] } },
+  anti_ige: { fields: { free_ige_reduction: [0, 0.99] } },
+  passive_igg4: { fields: { titre_mg_l: [0, 500] } },
+  barrier_repair: { fields: { permeability_factor: [0.05, 1] } },
+  mast_cell_stabiliser: { fields: { threshold_factor: [1, 50] } },
+};
+
+function applyIntervention(step, patient, p) {
+  const v = step.params;
+  switch (step.kind) {
+    case 'oral_immunotherapy':
+      return [immunotherapy(patient, v.daily_dose_mg, v.days, p).final, p];
+    case 'anti_ige': {
+      const keep = 1 - v.free_ige_reduction;
+      return [{ ...patient,
+        specific_ige_ku: patient.specific_ige_ku * keep,
+        total_ige_ku: patient.total_ige_ku * keep }, p];
+    }
+    case 'passive_igg4':
+      return [{ ...patient,
+        igg4_m: patient.igg4_m + v.titre_mg_l * 1e-3 / p.igg4_mw }, p];
+    case 'barrier_repair':
+      return [{ ...patient,
+        mucosal_barrier: (patient.mucosal_barrier ?? 1) * v.permeability_factor }, p];
+    case 'mast_cell_stabiliser':
+      return [patient,
+        { ...p, crosslink_threshold: p.crosslink_threshold * v.threshold_factor }];
+    default:
+      throw new Error(`unknown intervention ${step.kind}`);
+  }
+}
+
+function runProtocol(patient, steps, label = 'protocol', p = PARAMS) {
+  const before = elicitingDose(patient, p);
+  const glassBefore = challenge(patient, GLASS_OF_MILK_MG, p).symptom_score;
+
+  let current = patient;
+  let currentP = p;
+  for (const step of steps) [current, currentP] = applyIntervention(step, current, currentP);
+
+  const after = elicitingDose(current, currentP);
+  const glassAfter = challenge(current, GLASS_OF_MILK_MG, currentP);
+
+  return {
+    label, steps,
+    eliciting_dose_before_mg: before,
+    eliciting_dose_after_mg: after,
+    fold_shift: before > 0 ? after / before : Infinity,
+    glass_score_before: glassBefore,
+    glass_score_after: glassAfter.symptom_score,
+    specific_ige_ku: current.specific_ige_ku,
+    igg4_mg_l: current.igg4_m * currentP.igg4_mw * 1e3,
+    treg: current.treg ?? 0,
+    mucosal_barrier: current.mucosal_barrier ?? 1,
+    protects_against_a_glass: !glassAfter.reaction,
+  };
+}
+
+/* A mast cell, in three dimensions, showing what the engine computed.
+ *
+ * Not decoration. Every element on screen is bound to a number the simulation
+ * produced, and nothing is drawn that the model does not know:
+ *
+ *   receptors   FcepsilonRI on the membrane. Pale when bare, blue once they
+ *               carry milk-specific IgE, bright when an allergen has bridged
+ *               two of them. The proportions come from sensitizedReceptors()
+ *               and crosslinks().
+ *   allergen    beta-lactoglobulin drifting in, scaled to the free allergen
+ *               concentration at the mucosa.
+ *   granules    histamine leaving the cell, emitted at the rate degranulation
+ *               is actually running at.
+ *
+ * Raw WebGL2, no library: the page has to stay small and start instantly, and
+ * a general-purpose 3D engine is several hundred kilobytes to draw one sphere.
+ */
+
+const VERTEX_SPHERE = `#version 300 es
+precision highp float;
+in vec3 position;
+in vec3 normal;
+uniform mat4 uProjection;
+uniform mat4 uView;
+uniform mat4 uModel;
+out vec3 vNormal;
+out vec3 vViewDir;
+void main() {
+  vec4 world = uModel * vec4(position, 1.0);
+  vNormal = mat3(uModel) * normal;
+  vViewDir = -(uView * world).xyz;
+  gl_Position = uProjection * uView * world;
+}`;
+
+const FRAGMENT_SPHERE = `#version 300 es
+precision highp float;
+in vec3 vNormal;
+in vec3 vViewDir;
+uniform vec3 uBase;
+uniform vec3 uRim;
+out vec4 fragColor;
+void main() {
+  vec3 n = normalize(vNormal);
+  vec3 v = normalize(vViewDir);
+  vec3 light = normalize(vec3(0.45, 0.75, 0.8));
+  float lambert = max(dot(n, light), 0.0);
+  float wrap = lambert * 0.72 + 0.28;
+  // A rim term reads as a membrane edge, which is what makes a flat-shaded
+  // sphere look like a cell rather than a ball.
+  float rim = pow(1.0 - max(dot(n, v), 0.0), 2.6);
+  vec3 colour = uBase * wrap + uRim * rim * 0.85;
+  fragColor = vec4(colour, 1.0);
+}`;
+
+const VERTEX_POINTS = `#version 300 es
+precision highp float;
+in vec3 position;
+in float state;      // 0 bare, 1 sensitised, 2 crosslinked
+in float size;
+uniform mat4 uProjection;
+uniform mat4 uView;
+uniform mat4 uModel;
+uniform float uScale;
+out float vState;
+out float vFacing;
+void main() {
+  vec4 world = uModel * vec4(position, 1.0);
+  vec4 eye = uView * world;
+  vState = state;
+  // Points on the far side of the membrane dim rather than vanish, so the cell
+  // reads as a volume instead of a disc.
+  vec3 n = normalize(mat3(uModel) * position);
+  vFacing = dot(n, normalize(-(uView * vec4(0.0, 0.0, 0.0, 1.0)).xyz - eye.xyz));
+  gl_Position = uProjection * eye;
+  gl_PointSize = size * uScale / max(-eye.z, 0.1);
+}`;
+
+const FRAGMENT_POINTS = `#version 300 es
+precision highp float;
+in float vState;
+in float vFacing;
+uniform vec3 uBare;
+uniform vec3 uSensitised;
+uniform vec3 uCrosslinked;
+out vec4 fragColor;
+void main() {
+  float r = length(gl_PointCoord - vec2(0.5));
+  if (r > 0.5) discard;
+  vec3 colour = vState < 0.5 ? uBare : (vState < 1.5 ? uSensitised : uCrosslinked);
+  float depth = clamp(vFacing * 0.5 + 0.72, 0.30, 1.0);
+  // Bare receptors stay a soft-edged texture; the ones that matter get a hard
+  // core and a halo, so a few percent of the membrane still reads at a glance.
+  float alpha = vState < 0.5
+    ? smoothstep(0.5, 0.12, r) * 0.8
+    : (vState < 1.5
+        ? smoothstep(0.5, 0.28, r)
+        : smoothstep(0.5, 0.0, r) * 0.45 + smoothstep(0.28, 0.14, r));
+  float glow = vState > 1.5 ? 1.5 : 1.1;
+  fragColor = vec4(colour * glow, clamp(alpha, 0.0, 1.0) * depth);
+}`;
+
+const VERTEX_PARTICLE = `#version 300 es
+precision highp float;
+in vec3 position;
+in float size;
+in float fade;
+uniform mat4 uProjection;
+uniform mat4 uView;
+uniform float uScale;
+out float vFade;
+void main() {
+  vec4 eye = uView * vec4(position, 1.0);
+  vFade = fade;
+  gl_Position = uProjection * eye;
+  gl_PointSize = size * uScale / max(-eye.z, 0.1);
+}`;
+
+const FRAGMENT_PARTICLE = `#version 300 es
+precision highp float;
+in float vFade;
+uniform vec3 uColour;
+out vec4 fragColor;
+void main() {
+  float r = length(gl_PointCoord - vec2(0.5));
+  if (r > 0.5) discard;
+  float core = smoothstep(0.5, 0.0, r);
+  fragColor = vec4(uColour, core * core * vFade);
+}`;
+
+/* ---- small matrix helpers, column-major to match WebGL ---- */
+
+function perspective(fovY, aspect, near, far) {
+  const f = 1 / Math.tan(fovY / 2);
+  const d = 1 / (near - far);
+  return [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * d, -1, 0, 0, 2 * far * near * d, 0];
+}
+
+function lookAtOrigin(distance) {
+  return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, -distance, 1];
+}
+
+function rotationYX(yaw, pitch) {
+  const cy = Math.cos(yaw), sy = Math.sin(yaw);
+  const cx = Math.cos(pitch), sx = Math.sin(pitch);
+  // R = Rx * Ry
+  return [
+    cy, sy * sx, -sy * cx, 0,
+    0, cx, sx, 0,
+    sy, -cy * sx, cy * cx, 0,
+    0, 0, 0, 1,
+  ];
+}
+
+function compile(gl, type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    throw new Error('shader: ' + gl.getShaderInfoLog(shader));
+  }
+  return shader;
+}
+
+function program(gl, vertexSource, fragmentSource) {
+  const p = gl.createProgram();
+  gl.attachShader(p, compile(gl, gl.VERTEX_SHADER, vertexSource));
+  gl.attachShader(p, compile(gl, gl.FRAGMENT_SHADER, fragmentSource));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+    throw new Error('link: ' + gl.getProgramInfoLog(p));
+  }
+  return p;
+}
+
+function uvSphere(segments, rings) {
+  const positions = [];
+  const normals = [];
+  const indices = [];
+  for (let y = 0; y <= rings; y++) {
+    const phi = (y / rings) * Math.PI;
+    for (let x = 0; x <= segments; x++) {
+      const theta = (x / segments) * Math.PI * 2;
+      const nx = Math.sin(phi) * Math.cos(theta);
+      const ny = Math.cos(phi);
+      const nz = Math.sin(phi) * Math.sin(theta);
+      positions.push(nx, ny, nz);
+      normals.push(nx, ny, nz);
+    }
+  }
+  for (let y = 0; y < rings; y++) {
+    for (let x = 0; x < segments; x++) {
+      const a = y * (segments + 1) + x;
+      const b = a + segments + 1;
+      indices.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  return {
+    positions: new Float32Array(positions),
+    normals: new Float32Array(normals),
+    indices: new Uint16Array(indices),
+  };
+}
+
+/* Fibonacci sphere: receptors spread evenly rather than bunching at the poles,
+   which a naive lat/long placement does and which reads as an artefact. */
+function fibonacciPoints(count) {
+  const out = new Float32Array(count * 3);
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < count; i++) {
+    const y = 1 - (i / (count - 1)) * 2;
+    const radius = Math.sqrt(Math.max(0, 1 - y * y));
+    const theta = golden * i;
+    out[i * 3] = Math.cos(theta) * radius;
+    out[i * 3 + 1] = y;
+    out[i * 3 + 2] = Math.sin(theta) * radius;
+  }
+  return out;
+}
+
+const RECEPTOR_COUNT = 620;
+const ALLERGEN_MAX = 260;
+const GRANULE_MAX = 340;
+
+function createCellView(canvas, options = {}) {
+  const gl = canvas.getContext('webgl2', { antialias: true, alpha: true, premultipliedAlpha: false });
+  if (!gl) return null;
+
+  let programs;
+  try {
+    programs = {
+      sphere: program(gl, VERTEX_SPHERE, FRAGMENT_SPHERE),
+      points: program(gl, VERTEX_POINTS, FRAGMENT_POINTS),
+      particle: program(gl, VERTEX_PARTICLE, FRAGMENT_PARTICLE),
+    };
+  } catch (error) {
+    console.error('cell view unavailable:', error);
+    return null;
+  }
+
+  const sphere = uvSphere(56, 36);
+  const buffers = {
+    spherePos: gl.createBuffer(),
+    sphereNorm: gl.createBuffer(),
+    sphereIdx: gl.createBuffer(),
+    receptorPos: gl.createBuffer(),
+    receptorState: gl.createBuffer(),
+    receptorSize: gl.createBuffer(),
+    particlePos: gl.createBuffer(),
+    particleSize: gl.createBuffer(),
+    particleFade: gl.createBuffer(),
+  };
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.spherePos);
+  gl.bufferData(gl.ARRAY_BUFFER, sphere.positions, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.sphereNorm);
+  gl.bufferData(gl.ARRAY_BUFFER, sphere.normals, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.sphereIdx);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, sphere.indices, gl.STATIC_DRAW);
+
+  const receptorPositions = fibonacciPoints(RECEPTOR_COUNT);
+  const receptorState = new Float32Array(RECEPTOR_COUNT);
+  const receptorSize = new Float32Array(RECEPTOR_COUNT).fill(3.4);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.receptorPos);
+  gl.bufferData(gl.ARRAY_BUFFER, receptorPositions, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.receptorSize);
+  gl.bufferData(gl.ARRAY_BUFFER, receptorSize, gl.STATIC_DRAW);
+
+  /* particles: allergen drifting in, granules leaving */
+  const allergen = [];
+  const granules = [];
+  const particlePos = new Float32Array((ALLERGEN_MAX + GRANULE_MAX) * 3);
+  const particleSize = new Float32Array(ALLERGEN_MAX + GRANULE_MAX);
+  const particleFade = new Float32Array(ALLERGEN_MAX + GRANULE_MAX);
+
+  let state = { sensitised: 0, crosslinked: 0, activation: 0, allergen: 0, reaction: false };
+  let palette = options.palette || {};
+  let yaw = 0.6;
+  let pitch = -0.25;
+  let autoSpin = true;
+  let dragging = false;
+  let lastX = 0;
+  let lastY = 0;
+  let raf = 0;
+  let lastTime = 0;
+  let reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function seedAllergen() {
+    const target = Math.round(ALLERGEN_MAX * state.allergen);
+    while (allergen.length < target) {
+      const theta = Math.random() * Math.PI * 2;
+      const z = Math.random() * 2 - 1;
+      const r = Math.sqrt(1 - z * z);
+      const distance = 2.4 + Math.random() * 1.6;
+      allergen.push({
+        x: Math.cos(theta) * r * distance,
+        y: z * distance,
+        z: Math.sin(theta) * r * distance,
+        speed: 0.12 + Math.random() * 0.22,
+        size: 12 + Math.random() * 7,
+      });
+    }
+    while (allergen.length > target) allergen.pop();
+  }
+
+  function step(dt) {
+    seedAllergen();
+    for (const p of allergen) {
+      const d = Math.hypot(p.x, p.y, p.z);
+      if (d < 1.06) {
+        // Reached the membrane: send it back out so the field keeps moving
+        // rather than collapsing onto the surface.
+        const scale = (3.4 + Math.random()) / d;
+        p.x *= scale; p.y *= scale; p.z *= scale;
+        continue;
+      }
+      const pull = (p.speed * dt) / d;
+      p.x -= p.x * pull; p.y -= p.y * pull; p.z -= p.z * pull;
+    }
+
+    // Granules leave at the rate degranulation is actually running.
+    const emit = state.activation * dt * 26;
+    for (let i = 0; i < emit && granules.length < GRANULE_MAX; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const z = Math.random() * 2 - 1;
+      const r = Math.sqrt(1 - z * z);
+      const nx = Math.cos(theta) * r, ny = z, nz = Math.sin(theta) * r;
+      granules.push({ x: nx, y: ny, z: nz, vx: nx, vy: ny, vz: nz,
+                      life: 1, size: 9 + Math.random() * 9 });
+    }
+    for (let i = granules.length - 1; i >= 0; i--) {
+      const g = granules[i];
+      const speed = 0.9 * dt;
+      g.x += g.vx * speed; g.y += g.vy * speed; g.z += g.vz * speed;
+      g.life -= dt * 0.55;
+      if (g.life <= 0) granules.splice(i, 1);
+    }
+  }
+
+  function writeParticles() {
+    let n = 0;
+    for (const p of allergen) {
+      particlePos[n * 3] = p.x; particlePos[n * 3 + 1] = p.y; particlePos[n * 3 + 2] = p.z;
+      particleSize[n] = p.size; particleFade[n] = 0.75; n++;
+    }
+    const allergenCount = n;
+    for (const g of granules) {
+      particlePos[n * 3] = g.x; particlePos[n * 3 + 1] = g.y; particlePos[n * 3 + 2] = g.z;
+      particleSize[n] = g.size; particleFade[n] = Math.max(0, g.life); n++;
+    }
+    return { allergenCount, total: n };
+  }
+
+  function updateReceptorStates() {
+    // Only a few percent of receptors carry milk-specific IgE in a real patient,
+    // so the three states have to differ in size as well as colour. At a uniform
+    // size the handful that matter disappear into the crowd, and the membrane
+    // reads as texture instead of as a population.
+    const sensitised = Math.max(
+      state.sensitised > 0 ? 1 : 0, Math.round(RECEPTOR_COUNT * state.sensitised));
+    // Bridged receptors are genuinely rare — around 200 out of a quarter million,
+    // which is under a tenth of a percent. Rounding that down to nothing would
+    // hide the model's most striking fact: it takes almost none of them to fire
+    // the cell. So a bridged receptor that exists is always drawn, and drawn
+    // large enough that a single one is unmistakable.
+    const crosslinked = state.crosslinked > 0
+      ? Math.max(1, Math.round(sensitised * state.crosslinked)) : 0;
+    for (let i = 0; i < RECEPTOR_COUNT; i++) {
+      receptorState[i] = i < crosslinked ? 2 : (i < sensitised ? 1 : 0);
+      receptorSize[i] = i < crosslinked ? 21 : (i < sensitised ? 9 : 3.4);
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.receptorState);
+    gl.bufferData(gl.ARRAY_BUFFER, receptorState, gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.receptorSize);
+    gl.bufferData(gl.ARRAY_BUFFER, receptorSize, gl.DYNAMIC_DRAW);
+  }
+
+  function bindAttribute(prog, name, buffer, size) {
+    const location = gl.getAttribLocation(prog, name);
+    if (location < 0) return;
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.enableVertexAttribArray(location);
+    gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
+  }
+
+  function colour(name, fallback) {
+    const value = palette[name] || fallback;
+    if (Array.isArray(value)) return value;
+    const hex = String(value).trim().replace('#', '');
+    const full = hex.length === 3 ? hex.split('').map(c => c + c).join('') : hex;
+    const n = parseInt(full, 16);
+    return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+  }
+
+  function render(now) {
+    raf = requestAnimationFrame(render);
+    const dt = lastTime ? Math.min(0.05, (now - lastTime) / 1000) : 0.016;
+    lastTime = now;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
+    const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    gl.viewport(0, 0, width, height);
+
+    if (autoSpin && !reduceMotion) yaw += dt * 0.18;
+    if (!reduceMotion) step(dt);
+
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    const projection = perspective(0.85, width / height, 0.1, 40);
+    const view = lookAtOrigin(3.55);
+    const model = rotationYX(yaw, pitch);
+
+    /* membrane */
+    gl.useProgram(programs.sphere);
+    gl.uniformMatrix4fv(gl.getUniformLocation(programs.sphere, 'uProjection'), false, projection);
+    gl.uniformMatrix4fv(gl.getUniformLocation(programs.sphere, 'uView'), false, view);
+    gl.uniformMatrix4fv(gl.getUniformLocation(programs.sphere, 'uModel'), false, model);
+    gl.uniform3fv(gl.getUniformLocation(programs.sphere, 'uBase'), colour('membrane', '#16233a'));
+    gl.uniform3fv(gl.getUniformLocation(programs.sphere, 'uRim'), colour('rim', '#2f6fd0'));
+    bindAttribute(programs.sphere, 'position', buffers.spherePos, 3);
+    bindAttribute(programs.sphere, 'normal', buffers.sphereNorm, 3);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.sphereIdx);
+    gl.drawElements(gl.TRIANGLES, sphere.indices.length, gl.UNSIGNED_SHORT, 0);
+
+    /* receptors */
+    gl.useProgram(programs.points);
+    gl.uniformMatrix4fv(gl.getUniformLocation(programs.points, 'uProjection'), false, projection);
+    gl.uniformMatrix4fv(gl.getUniformLocation(programs.points, 'uView'), false, view);
+    gl.uniformMatrix4fv(gl.getUniformLocation(programs.points, 'uModel'), false, model);
+    gl.uniform1f(gl.getUniformLocation(programs.points, 'uScale'), height / dpr / 90);
+    gl.uniform3fv(gl.getUniformLocation(programs.points, 'uBare'), colour('bare', '#43546e'));
+    gl.uniform3fv(gl.getUniformLocation(programs.points, 'uSensitised'), colour('sensitised', '#4d9bff'));
+    gl.uniform3fv(gl.getUniformLocation(programs.points, 'uCrosslinked'), colour('crosslinked', '#ffd166'));
+    bindAttribute(programs.points, 'position', buffers.receptorPos, 3);
+    bindAttribute(programs.points, 'state', buffers.receptorState, 1);
+    bindAttribute(programs.points, 'size', buffers.receptorSize, 1);
+    gl.drawArrays(gl.POINTS, 0, RECEPTOR_COUNT);
+
+    /* allergen and granules, additive so they read as free-floating */
+    const { allergenCount, total } = writeParticles();
+    if (total) {
+      gl.depthMask(false);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+      gl.useProgram(programs.particle);
+      gl.uniformMatrix4fv(gl.getUniformLocation(programs.particle, 'uProjection'), false, projection);
+      gl.uniformMatrix4fv(gl.getUniformLocation(programs.particle, 'uView'), false, view);
+      gl.uniform1f(gl.getUniformLocation(programs.particle, 'uScale'), height / dpr / 90);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.particlePos);
+      gl.bufferData(gl.ARRAY_BUFFER, particlePos, gl.DYNAMIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.particleSize);
+      gl.bufferData(gl.ARRAY_BUFFER, particleSize, gl.DYNAMIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.particleFade);
+      gl.bufferData(gl.ARRAY_BUFFER, particleFade, gl.DYNAMIC_DRAW);
+      bindAttribute(programs.particle, 'position', buffers.particlePos, 3);
+      bindAttribute(programs.particle, 'size', buffers.particleSize, 1);
+      bindAttribute(programs.particle, 'fade', buffers.particleFade, 1);
+
+      // Allergen is drawn in the rotating frame's colour, granules in another,
+      // so the two flows never read as the same thing moving both ways.
+      gl.uniform3fv(gl.getUniformLocation(programs.particle, 'uColour'), colour('allergenDot', '#7fe3c0'));
+      gl.drawArrays(gl.POINTS, 0, allergenCount);
+      if (total > allergenCount) {
+        gl.uniform3fv(gl.getUniformLocation(programs.particle, 'uColour'), colour('granule', '#ff8f6b'));
+        gl.drawArrays(gl.POINTS, allergenCount, total - allergenCount);
+      }
+      gl.depthMask(true);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    }
+  }
+
+  /* ---- interaction ---- */
+  const onDown = event => {
+    dragging = true; autoSpin = false;
+    lastX = event.clientX ?? event.touches[0].clientX;
+    lastY = event.clientY ?? event.touches[0].clientY;
+    canvas.setPointerCapture?.(event.pointerId);
+  };
+  const onMove = event => {
+    if (!dragging) return;
+    const x = event.clientX ?? event.touches[0].clientX;
+    const y = event.clientY ?? event.touches[0].clientY;
+    yaw -= (x - lastX) * 0.008;
+    pitch = Math.max(-1.2, Math.min(1.2, pitch - (y - lastY) * 0.008));
+    lastX = x; lastY = y;
+    event.preventDefault();
+  };
+  const onUp = () => { dragging = false; };
+
+  canvas.addEventListener('pointerdown', onDown);
+  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('pointerup', onUp);
+  canvas.addEventListener('pointercancel', onUp);
+  canvas.addEventListener('pointerleave', onUp);
+  canvas.style.touchAction = 'none';
+
+  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const onMotionChange = () => { reduceMotion = motionQuery.matches; };
+  motionQuery.addEventListener?.('change', onMotionChange);
+
+  updateReceptorStates();
+  raf = requestAnimationFrame(render);
+
+  return {
+    /** Bind the view to a fresh engine result. All four values are fractions. */
+    update(next) {
+      const changedReceptors =
+        next.sensitised !== state.sensitised || next.crosslinked !== state.crosslinked;
+      state = { ...state, ...next };
+      if (changedReceptors) updateReceptorStates();
+    },
+    setPalette(next) { palette = next; },
+    resume() { autoSpin = true; },
+    destroy() {
+      cancelAnimationFrame(raf);
+      canvas.removeEventListener('pointerdown', onDown);
+      canvas.removeEventListener('pointermove', onMove);
+      canvas.removeEventListener('pointerup', onUp);
+      canvas.removeEventListener('pointercancel', onUp);
+      canvas.removeEventListener('pointerleave', onUp);
+      motionQuery.removeEventListener?.('change', onMotionChange);
+    },
+  };
+}
+
+/* Tikkun Lab — application front end.
+ *
+ * Compute is split on one principle: whatever has to feel instant runs here in
+ * the browser, whatever cannot run here goes to the server.
+ *
+ *   here    engine.js drives every slider at about a millisecond a frame. It is
+ *           not a second opinion — same equations, checked value-by-value
+ *           against the Python engine by verify.mjs.
+ *   server  the agent army (needs API keys and about a minute), the experiment
+ *           log, and the parameter registry with its citations.
+ */
+
+
+
+const $ = id => document.getElementById(id);
+const MG_PER_ML = 33;                       // cow's milk carries ~33 mg protein/mL
+const STORE_KEY = 'tikkun-lab-state-v1';
+
+/* ---------------- helpers ---------------- */
+
+const toLog = (pos, lo, hi) =>
+  Math.pow(10, Math.log10(lo) + (Math.log10(hi) - Math.log10(lo)) * pos / 100);
+const fromLog = (v, lo, hi) =>
+  100 * (Math.log10(v) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo));
+
+const SIGE = [0.35, 300], TIGE = [30, 3000], BARRIER = [0.2, 5], DOSE = [0.01, 16000];
+
+const num = v => (v === 'Infinity' ? Infinity : v === '-Infinity' ? -Infinity : v);
+
+function fmtMg(mg) {
+  mg = num(mg);
+  if (!isFinite(mg)) return '∞';
+  if (mg < 1) return mg.toFixed(3);
+  if (mg < 100) return mg.toFixed(1);
+  return Math.round(mg).toLocaleString('en-US');
+}
+
+function milkEquivalent(mg) {
+  mg = num(mg);
+  if (!isFinite(mg)) return 'כל כמות נסבלת';
+  const ml = mg / MG_PER_ML;
+  if (ml < 0.05) return 'פחות מטיפה';
+  if (ml < 1) return Math.round(ml * 1000) + ' מיקרוליטר';
+  if (ml < 5) return ml.toFixed(1) + ' מ״ל — פחות מכפית';
+  if (ml < 240) return ml.toFixed(0) + ' מ״ל';
+  return (ml / 240).toFixed(1) + ' כוסות';
+}
+
+function toast(message) {
+  const el = $('toast');
+  el.textContent = message;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+async function api(path, body) {
+  const options = body === undefined
+    ? {}
+    : { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body) };
+  const response = await fetch(path, options);
+  const payload = await response.json().catch(() => ({ error: 'bad response' }));
+  if (!response.ok) throw new Error(payload.error || response.statusText);
+  return payload;
+}
+
+/* ---------------- state ---------------- */
+
+const state = {
+  patient: { ...PATIENTS.default },
+  preset: 'default',
+  dose: 25,
+  levers: {
+    oral_immunotherapy:   { on: false, daily_dose_mg: 300, days: 365 },
+    anti_ige:             { on: false, free_ige_reduction: 0.9 },
+    passive_igg4:         { on: false, titre_mg_l: 120 },
+    barrier_repair:       { on: false, permeability_factor: 0.4 },
+    mast_cell_stabiliser: { on: false, threshold_factor: 8 },
+  },
+};
+
+function persist() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      patient: state.patient, preset: state.preset,
+      dose: state.dose, levers: state.levers,
+    }));
+  } catch { /* private browsing — the app still works, it just forgets */ }
+}
+
+function restore() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (!saved) return;
+    Object.assign(state.patient, saved.patient || {});
+    state.preset = saved.preset ?? state.preset;
+    state.dose = saved.dose ?? state.dose;
+    for (const [kind, values] of Object.entries(saved.levers || {})) {
+      if (state.levers[kind]) Object.assign(state.levers[kind], values);
+    }
+  } catch { /* corrupt entry — start fresh rather than fail to boot */ }
+}
+
+/* ---------------- levers ---------------- */
+
+const LEVER_UI = [
+  { kind: 'oral_immunotherapy', name: 'אימונותרפיה פומית',
+    mech: 'מנה יומית מעלה IgG4 חוסם ומשרה תאי Treg. Skripak 2008.',
+    fields: [
+      { key: 'daily_dose_mg', label: 'מינון יומי', range: [1, 3000], log: true, unit: 'מ״ג/יום' },
+      { key: 'days', label: 'משך', range: [30, 1095], unit: 'ימים' }] },
+  { kind: 'anti_ige', name: 'אנטי-IgE (אומאליזומאב)',
+    mech: 'סופח IgE חופשי, כך שפחות קולטנים נושאים IgE לחלב. Wood 2016.',
+    fields: [{ key: 'free_ige_reduction', label: 'הפחתת IgE חופשי', range: [0, 0.99], pct: true }] },
+  { kind: 'passive_igg4', name: 'נוגדן חוסם פסיבי',
+    mech: 'מכסה אפיטופים על האלרגן ישירות, בלי להמתין שהגוף ייצר. Orengo 2018.',
+    fields: [{ key: 'titre_mg_l', label: 'טיטר', range: [0, 400], unit: 'מ״ג/ל׳' }] },
+  { kind: 'barrier_repair', name: 'תיקון המחסום הרירי',
+    mech: 'פחות אלרגן שלם חוצה את האפיתל באותו מינון נאכל.',
+    fields: [{ key: 'permeability_factor', label: 'חדירות שנותרה', range: [0.05, 1], pct: true }] },
+  { kind: 'mast_cell_stabiliser', name: 'מייצב תאי פיטום',
+    mech: 'מעלה את מספר הקישורים הצולבים הדרוש לדגרנולציה. Zur 1987.',
+    fields: [{ key: 'threshold_factor', label: 'העלאת הסף', range: [1, 50], log: true, unit: '×' }] },
+];
+
+const activeSteps = () => LEVER_UI
+  .filter(l => state.levers[l.kind].on)
+  .map(l => ({ kind: l.kind,
+               params: Object.fromEntries(l.fields.map(f => [f.key, state.levers[l.kind][f.key]])) }));
+
+const describeStep = step =>
+  `${step.kind}(${Object.entries(step.params)
+    .map(([k, v]) => `${k}=${Number(v).toPrecision(3).replace(/\.?0+$/, '')}`).join(', ')})`;
+
+/* ---------------- charts ---------------- */
+
+function palette() {
+  const s = getComputedStyle(document.documentElement);
+  const g = n => s.getPropertyValue(n).trim();
+  return { accent: g('--accent'), stop: g('--stop'), ink3: g('--ink-3'), rule: g('--rule') };
+}
+
+function glPalette() {
+  const s = getComputedStyle(document.documentElement);
+  const g = n => s.getPropertyValue(n).trim();
+  return {
+    membrane: g('--gl-membrane'), rim: g('--gl-rim'), bare: g('--gl-bare'),
+    sensitised: g('--gl-sens'), crosslinked: g('--gl-cross'),
+    allergenDot: g('--gl-allergen'), granule: g('--gl-granule'),
+  };
+}
+
+/* Both dimensions come from the element's laid-out size, so the canvas follows
+ * whatever CSS gives it — a clamp against the viewport, a narrowing column, a
+ * panel that was hidden when the page loaded. Reading a fixed height attribute
+ * instead pins the chart to one size forever. */
+function setup(canvas) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.max(1, Math.round(canvas.clientWidth));
+  const h = Math.max(1, Math.round(canvas.clientHeight));
+  const pixelW = Math.round(w * dpr);
+  const pixelH = Math.round(h * dpr);
+  if (canvas.width !== pixelW || canvas.height !== pixelH) {
+    canvas.width = pixelW;
+    canvas.height = pixelH;
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  // Narrow charts get tighter gutters and fewer labels; crowded ticks are worse
+  // than missing ones.
+  const compact = w < 430;
+  return {
+    ctx, w, h, compact,
+    pad: compact ? { t: 10, r: 8, b: 20, l: 27 } : { t: 12, r: 10, b: 24, l: 34 },
+    font: compact ? '8px' : '9px',
+  };
+}
+
+/** Pick as many labels as will fit without crowding. */
+function tickCount(width, minSpacing = 88) {
+  return Math.max(2, Math.min(6, Math.floor(width / minSpacing)));
+}
+
+function drawHistamine(withTx, without) {
+  const canvas = $('chart-hist');
+  if (!canvas.clientWidth || !canvas.clientHeight) return;
+  const { ctx, w, h, pad, font, compact } = setup(canvas);
+  const p = palette();
+  const maxY = Math.max(2, ...withTx.map(d => d[1]), ...without.map(d => d[1])) * 1.12;
+  const maxX = withTx[withTx.length - 1][0];
+  const X = t => pad.l + (w - pad.l - pad.r) * t / maxX;
+  const Y = v => h - pad.b - (h - pad.t - pad.b) * v / maxY;
+
+  ctx.font = `${font} "IBM Plex Mono", monospace`;
+  ctx.strokeStyle = p.rule; ctx.lineWidth = 1; ctx.fillStyle = p.ink3;
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  // One decimal while the axis spans only a few ng/mL, or the gridlines label
+  // themselves 0, 1, 1, 2 and two of them look identical.
+  const digits = maxY < 6 ? 1 : 0;
+  const rows = h < 150 ? 2 : 3;
+  for (let i = 0; i <= rows; i++) {
+    const y = Y(maxY * i / rows);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    ctx.fillText((maxY * i / rows).toFixed(digits), pad.l - 4, y);
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  const cols = tickCount(w - pad.l - pad.r, compact ? 62 : 84);
+  for (let i = 0; i <= cols; i++) {
+    ctx.fillText(Math.round(maxX * i / cols / 60) + 'ד', X(maxX * i / cols), h - pad.b + 4);
+  }
+  // The plasma histamine that corresponds to objective symptoms, so the reader
+  // can see how far the curve has to climb before anything happens.
+  if (2.4 < maxY) {
+    ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = p.stop; ctx.globalAlpha = .55;
+    ctx.beginPath(); ctx.moveTo(pad.l, Y(2.4)); ctx.lineTo(w - pad.r, Y(2.4)); ctx.stroke();
+    ctx.restore();
+  }
+  const line = (data, color, fill) => {
+    const trace = () => {
+      ctx.beginPath();
+      data.forEach(([t, v], i) => (i ? ctx.lineTo(X(t), Y(v)) : ctx.moveTo(X(t), Y(v))));
+    };
+    if (fill) {
+      trace(); ctx.save(); ctx.lineTo(X(maxX), Y(0)); ctx.lineTo(X(0), Y(0)); ctx.closePath();
+      ctx.globalAlpha = .13; ctx.fillStyle = color; ctx.fill(); ctx.restore();
+    }
+    trace(); ctx.strokeStyle = color; ctx.lineWidth = fill ? 2 : 1.3; ctx.stroke();
+  };
+  ctx.save(); ctx.globalAlpha = .5; line(without, p.ink3, false); ctx.restore();
+  line(withTx, p.accent, true);
+}
+
+const DOSE_LO = 0.01, DOSE_HI = 16000;
+/** Where the dose axis was last drawn, so the pointer can be mapped back to a dose. */
+let doseAxis = null;
+
+function drawDoseResponse(base, treated, edBase, edTreated) {
+  const canvas = $('chart-dose');
+  if (!canvas.clientWidth || !canvas.clientHeight) return;
+  const { ctx, w, h, pad, font, compact } = setup(canvas);
+  const p = palette();
+  const lo = Math.log10(DOSE_LO), hi = Math.log10(DOSE_HI);
+  const X = mg => pad.l + (w - pad.l - pad.r) * (Math.log10(mg) - lo) / (hi - lo);
+  const Y = v => h - pad.b - (h - pad.t - pad.b) * v / 10;
+  doseAxis = { X, Y, pad, w, h, lo, hi };
+
+  ctx.font = `${font} "IBM Plex Mono", monospace`;
+  ctx.strokeStyle = p.rule; ctx.lineWidth = 1; ctx.fillStyle = p.ink3;
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  const step = h < 210 ? 5 : 2.5;
+  for (let v = 0; v <= 10; v += step) {
+    const y = Y(v);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    ctx.fillText(v.toFixed(0), pad.l - 4, y);
+  }
+  // Decade ticks, thinned to whatever the width can hold without overlapping.
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  const decades = [0.01, 0.1, 1, 10, 100, 1000, 16000];
+  const every = Math.max(1, Math.ceil(decades.length / tickCount(w - pad.l - pad.r, compact ? 52 : 74)));
+  decades.filter((_, i) => i % every === 0 || i === decades.length - 1).forEach(mg =>
+    ctx.fillText(mg >= 1000 ? (mg / 1000) + 'g' : mg + 'mg', X(mg), h - pad.b + 5));
+
+  ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = p.stop;
+  ctx.beginPath(); ctx.moveTo(pad.l, Y(3)); ctx.lineTo(w - pad.r, Y(3)); ctx.stroke(); ctx.restore();
+
+  const curve = (d, color, solid) => {
+    ctx.beginPath();
+    d.doses.forEach((mg, i) =>
+      (i ? ctx.lineTo(X(mg), Y(d.scores[i])) : ctx.moveTo(X(mg), Y(d.scores[i]))));
+    ctx.strokeStyle = color; ctx.lineWidth = solid ? 2.2 : 1.3;
+    if (!solid) { ctx.save(); ctx.globalAlpha = .55; ctx.stroke(); ctx.restore(); }
+    else ctx.stroke();
+  };
+  const marker = (mg, color) => {
+    if (!isFinite(mg) || mg < 0.01 || mg > 16000) return;
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.globalAlpha = .85;
+    ctx.beginPath(); ctx.moveTo(X(mg), Y(0)); ctx.lineTo(X(mg), Y(3)); ctx.stroke();
+    ctx.fillStyle = color; ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.arc(X(mg), Y(3), 3.5, 0, 7); ctx.fill(); ctx.restore();
+  };
+  curve(base, p.ink3, false); marker(edBase, p.ink3);
+  if (treated) { curve(treated, p.accent, true); marker(edTreated, p.accent); }
+
+  if (hoverDoseMg !== null) drawDoseCrosshair(ctx, X, Y, p, h, pad);
+}
+
+/* ---------------- reading a point off the dose curve ---------------- */
+
+let hoverDoseMg = null;
+/* The last drawn chart inputs. Hovering and resizing both need to repaint
+ * without re-running the engine over 46 doses, which is ~20 ms and would make
+ * the pointer feel heavy. */
+let lastCharts = null;
+
+function drawCurves() {
+  if (!lastCharts) return;
+  drawHistamine(lastCharts.histTx, lastCharts.histBase);
+  drawDoseResponse(lastCharts.base, lastCharts.treated,
+                   lastCharts.edBase, lastCharts.edTx);
+}
+
+function drawDoseCrosshair(ctx, X, Y, p, h, pad) {
+  const x = X(hoverDoseMg);
+  if (x < pad.l || x > ctx.canvas.clientWidth - pad.r) return;
+  ctx.save();
+  ctx.strokeStyle = p.accent; ctx.globalAlpha = .45; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
+  ctx.restore();
+}
+
+function bindDoseHover() {
+  const canvas = $('chart-dose');
+  const readout = $('dose-readout');
+  if (!canvas || !readout) return;
+
+  const onMove = event => {
+    if (!doseAxis) return;
+    const box = canvas.getBoundingClientRect();
+    const x = event.clientX - box.left;
+    const { pad, w, lo, hi } = doseAxis;
+    if (x < pad.l || x > w - pad.r) return onLeave();
+
+    const fraction = (x - pad.l) / (w - pad.l - pad.r);
+    hoverDoseMg = Math.pow(10, lo + (hi - lo) * fraction);
+
+    // Recomputed from the engine at the exact hovered dose, not interpolated off
+    // the drawn polyline — the curve is sampled at 46 points and reading between
+    // them would quietly invent values.
+    const steps = activeSteps();
+    let patient = state.patient, params = PARAMS;
+    for (const s of steps) [patient, params] = applyIntervention(s, patient, params);
+    const result = challenge(patient, hoverDoseMg, params);
+
+    readout.innerHTML =
+      `<b>${fmtMg(hoverDoseMg)} מ״ג</b> · ${milkEquivalent(hoverDoseMg)}<br>` +
+      `ציון ${result.symptom_score.toFixed(1)}/10 · ` +
+      `${result.reaction ? 'תגובה' : 'נסבל'}`;
+    readout.classList.add('show');
+    drawCurves();
+  };
+
+  const onLeave = () => {
+    if (hoverDoseMg === null) return;
+    hoverDoseMg = null;
+    readout.classList.remove('show');
+    drawCurves();
+  };
+
+  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('pointerdown', onMove);
+  canvas.addEventListener('pointerleave', onLeave);
+  canvas.addEventListener('pointercancel', onLeave);
+}
+
+/* ---------------- bench ---------------- */
+
+const PRESET_HE = { exquisite: 'רגיש קיצוני', default: 'טיפוסי',
+                    moderate: 'בינוני', outgrowing: 'מחלים' };
+
+function buildChips() {
+  const chips = $('chips');
+  Object.keys(PRESET_HE).forEach(key => {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.type = 'button'; b.textContent = PRESET_HE[key];
+    b.setAttribute('aria-pressed', key === state.preset);
+    b.onclick = () => {
+      state.patient = { ...PATIENTS[key] };
+      state.preset = key;
+      syncPatient();
+      [...chips.children].forEach(c => c.setAttribute('aria-pressed', c === b));
+      recompute();
+    };
+    chips.appendChild(b);
+  });
+}
+
+function buildLevers() {
+  const host = $('levers');
+  LEVER_UI.forEach(lever => {
+    const wrap = document.createElement('div');
+    wrap.className = 'lever';
+    wrap.dataset.on = String(state.levers[lever.kind].on);
+    const id = 'lv-' + lever.kind;
+    wrap.innerHTML =
+      `<div class="lever-head"><input type="checkbox" id="${id}">` +
+      `<label for="${id}">${lever.name}</label></div>` +
+      `<p class="mech">${lever.mech}</p><div class="controls"></div>`;
+    const controls = wrap.querySelector('.controls');
+
+    lever.fields.forEach(f => {
+      const sid = `${id}-${f.key}`;
+      const field = document.createElement('div');
+      field.className = 'field';
+      field.innerHTML =
+        `<div class="field-top"><label for="${sid}">${f.label}</label>` +
+        `<span class="val" id="${sid}-v"></span></div>` +
+        `<input type="range" id="${sid}" min="0" max="100">`;
+      controls.appendChild(field);
+
+      const input = field.querySelector('input');
+      // Reached through the field, not document.getElementById: this whole
+      // subtree is still detached until the loop appends it, so a lookup by id
+      // returns null and the first write throws.
+      const readout = field.querySelector('.val');
+      const [lo, hi] = f.range;
+      input.disabled = !state.levers[lever.kind].on;
+      const write = () => {
+        const v = f.log ? toLog(+input.value, lo, hi) : lo + (hi - lo) * (+input.value) / 100;
+        state.levers[lever.kind][f.key] = v;
+        readout.textContent = f.pct
+          ? Math.round(v * 100) + '%'
+          : (v >= 100 ? Math.round(v) : v.toFixed(v < 10 ? 1 : 0)) + ' ' + (f.unit || '');
+      };
+      const cur = state.levers[lever.kind][f.key];
+      input.value = f.log ? fromLog(cur, lo, hi) : 100 * (cur - lo) / (hi - lo);
+      write();
+      input.oninput = () => { write(); schedule(); };
+      f._input = input;
+    });
+
+    const box = wrap.querySelector('input[type=checkbox]');
+    box.checked = state.levers[lever.kind].on;
+    box.onchange = e => {
+      state.levers[lever.kind].on = e.target.checked;
+      wrap.dataset.on = String(e.target.checked);
+      lever.fields.forEach(f => { f._input.disabled = !e.target.checked; });
+      recompute();
+    };
+    host.appendChild(wrap);
+  });
+}
+
+function syncPatient() {
+  $('sige').value = fromLog(state.patient.specific_ige_ku, ...SIGE);
+  $('tige').value = fromLog(state.patient.total_ige_ku, ...TIGE);
+  $('barrier').value = fromLog(state.patient.mucosal_barrier, ...BARRIER);
+  labelPatient();
+}
+
+function labelPatient() {
+  $('sige-v').textContent = state.patient.specific_ige_ku.toFixed(1) + ' kU/L';
+  $('tige-v').textContent = Math.round(state.patient.total_ige_ku) + ' kU/L';
+  $('barrier-v').textContent = state.patient.mucosal_barrier.toFixed(2) + '×';
+  const s = state.patient.specific_ige_ku;
+  $('sige-note').textContent = s >= 15
+    ? 'מעל 15 — ערך ההכרעה שמנבא אלרגיה פעילה ב-95% מהמקרים.'
+    : s >= 2 ? 'טווח ביניים. חלק מהילדים כאן כבר סובלים כמויות קטנות.'
+             : 'מתחת ל-2 — רוב הילדים כאן כבר החלימו מהאלרגיה.';
+  $('agent-patient').textContent =
+    `ירוץ על: milk-sIgE ${state.patient.specific_ige_ku.toFixed(1)}, ` +
+    `total IgE ${Math.round(state.patient.total_ige_ku)}, ` +
+    `barrier ${state.patient.mucosal_barrier.toFixed(2)}×`;
+}
+
+function labelDose() {
+  $('dose-v').textContent = fmtMg(state.dose) + ' מ״ג';
+  $('dose-note').textContent = milkEquivalent(state.dose) +
+    (state.dose >= 7000 ? ' — כוס חלב מלאה' : '');
+}
+
+function clearChips() {
+  state.preset = null;
+  [...$('chips').children].forEach(c => c.setAttribute('aria-pressed', 'false'));
+}
+
+const PROTOCOL_PANEL = [
+  ['אימונותרפיה 30 מ״ג/יום', [{ kind: 'oral_immunotherapy', params: { daily_dose_mg: 30, days: 365 } }]],
+  ['אימונותרפיה 300 מ״ג/יום', [{ kind: 'oral_immunotherapy', params: { daily_dose_mg: 300, days: 365 } }]],
+  ['אימונותרפיה 1000 מ״ג/יום', [{ kind: 'oral_immunotherapy', params: { daily_dose_mg: 1000, days: 365 } }]],
+  ['אנטי-IgE ואז אימונותרפיה', [{ kind: 'anti_ige', params: { free_ige_reduction: 0.95 } },
+                                 { kind: 'oral_immunotherapy', params: { daily_dose_mg: 300, days: 365 } }]],
+  ['נוגדן חוסם פסיבי', [{ kind: 'passive_igg4', params: { titre_mg_l: 120 } }]],
+];
+
+let lastResult = null;
+
+function recompute() {
+  const steps = activeSteps();
+  let treated = state.patient, params = PARAMS;
+  for (const s of steps) [treated, params] = applyIntervention(s, treated, params);
+  const hasTx = steps.length > 0;
+
+  const rTx = challenge(treated, state.dose, params, { keepTrace: true });
+  const rBase = hasTx ? challenge(state.patient, state.dose, PARAMS, { keepTrace: true }) : rTx;
+
+  const v = $('verdict');
+  v.className = 'verdict ' + (rTx.symptom_score >= 6 ? 'v-danger'
+                            : rTx.reaction ? 'v-caution' : 'v-safe');
+  $('verdict-word').textContent = rTx.symptom_score >= 6 ? 'תגובה חמורה'
+                                : rTx.reaction ? 'תגובה' : 'נסבל';
+  $('verdict-why').textContent = rTx.reaction
+    ? (rTx.systemic_score > rTx.local_score
+        ? 'סימפטומים מערכתיים — היסטמין בפלזמה' : 'סימפטומים מקומיים — עיכול')
+    : 'מתחת לסף הסימפטומים האובייקטיביים';
+  $('verdict-score').innerHTML = rTx.symptom_score.toFixed(1) + '<small>/10</small>';
+
+  $('metrics').innerHTML = [
+    ['קישורים צולבים', Math.round(rTx.crosslinks_per_cell).toLocaleString('en-US'), 'לתא',
+     'אלרגן אחד מגשר בין שני נוגדנים. מעל 100 לתא — התא מתפוצץ.'],
+    ['תאים מדגרנלים', (rTx.activation * 100).toFixed(1), '%',
+     'איזה חלק מהתאים שנחשפו אכן שחררו את התכולה שלהם.'],
+    ['שיא היסטמין', rTx.peak_histamine.toFixed(2), 'ng/mL',
+     'מעל 2.4 מתחילים סימפטומים. מעל 10 זו תגובה מסכנת חיים.'],
+    ['זמן לשיא', rTx.peak_histamine > 0.51 ? (rTx.time_to_peak_s / 60).toFixed(1) : '—', 'דקות',
+     'כמה זמן אחרי הבליעה. הקיבה והמעי מעכבים את זה.'],
+    ['אלרגן חופשי', (rTx.free_allergen_m * 1e12).toFixed(1), 'pM',
+     'הריכוז שבאמת מגיע לתא, אחרי המחסום ואחרי חסימה על ידי נוגדנים.'],
+    ['מאגר מגויס', (rTx.engaged_fraction * 100).toFixed(1), '%',
+     'מנה גדולה פוגשת יותר שטח מעי, לא ריכוז גבוה יותר.'],
+  ].map(([k, val, u, why]) =>
+    `<div class="metric"><span class="k">${k}</span>` +
+    `<span class="v">${val} <span class="u">${u}</span></span>` +
+    `<span class="why">${why}</span></div>`).join('');
+
+  drawHistamine(rTx.trace, rBase.trace);
+  updateCell(treated, params, rTx);
+
+  const edBase = elicitingDose(state.patient, PARAMS);
+  const edTx = hasTx ? elicitingDose(treated, params) : edBase;
+  const fold = edTx / edBase;
+
+  $('shift').innerHTML =
+    `<div class="side"><span class="k">סף היום</span>` +
+    `<span class="v">${fmtMg(edBase)}</span>` +
+    `<span class="sub">${milkEquivalent(edBase)}</span></div>` +
+    `<div class="arrow">${hasTx ? '←' : '·'}<small>${
+      hasTx ? (isFinite(fold) ? fold.toFixed(0) + '× גבוה יותר' : 'ללא תגובה') : 'ללא טיפול'
+    }</small></div>` +
+    `<div class="side"><span class="k">סף אחרי טיפול</span>` +
+    `<span class="v" style="color:${hasTx ? 'var(--hema)' : 'var(--ink-3)'}">${fmtMg(edTx)}</span>` +
+    `<span class="sub">${milkEquivalent(edTx)}</span></div>`;
+
+  lastCharts = {
+    histTx: rTx.trace, histBase: rBase.trace,
+    base: doseResponse(state.patient, PARAMS, DOSE_LO, DOSE_HI, 46),
+    treated: hasTx ? doseResponse(treated, params, DOSE_LO, DOSE_HI, 46) : null,
+    edBase, edTx,
+  };
+  drawDoseResponse(lastCharts.base, lastCharts.treated, edBase, edTx);
+
+  const rows = PROTOCOL_PANEL
+    .map(([name, s]) => runProtocol(state.patient, s, name))
+    .sort((a, b) => b.fold_shift - a.fold_shift);
+  $('protocols').tBodies[0].innerHTML = rows.map(o =>
+    `<tr><td>${o.label}</td><td class="n">${fmtMg(o.eliciting_dose_after_mg)} מ״ג</td>` +
+    `<td class="n">${isFinite(o.fold_shift) ? o.fold_shift.toFixed(0) + '×' : '∞'}</td>` +
+    `<td class="n">${o.igg4_mg_l.toFixed(1)}</td>` +
+    `<td>${o.protects_against_a_glass
+      ? '<span class="badge b-safe">כן</span>' : '<span class="badge b-danger">לא</span>'}</td></tr>`
+  ).join('');
+
+  renderLimits(edBase, rTx);
+  lastResult = { challenge: rTx, eliciting_dose_before_mg: edBase,
+                 eliciting_dose_after_mg: edTx, fold_shift: fold, dose_mg: state.dose };
+  persist();
+}
+
+function renderLimits(edBase, r) {
+  const notes = [];
+  if (!isFinite(edBase))
+    notes.push('המטופל הזה לא מגיב לשום מינון שנבדק — עד 100 גרם חלבון חלב. זו תשובה נכונה עבור מי שהחלים, לא פער במודל.');
+  if (state.patient.specific_ige_ku > state.patient.total_ige_ku)
+    notes.push('IgE ספציפי גדול מ-IgE כללי — המנוע חוסם את היחס ב-1, כי זה בלתי אפשרי פיזית.');
+  if (r.free_allergen_m > 1.7e-8)
+    notes.push('הריכוז חצה את שיא עקומת הקישור (17 nM). מכאן ומעלה עודף אלרגן דווקא מפחית קישור צולב — אפקט הפרוזון.');
+  $('limits').innerHTML = notes.length
+    ? '<b>שים לב.</b> ' + notes.join(' ')
+    : '<b>איך לקרוא את זה.</b> הסף המעורר הוא המינון שבו הציון חוצה 3 — הנקודה שבה אתגר מזון קליני נחשב חיובי. כל שאר המספרים נגזרים ממנו, לא להפך.';
+}
+
+/* ---------------- the cell view ---------------- */
+
+let cellView = null;
+
+/* Bind the 3D view to what the engine just computed, and say in words what the
+ * picture is showing. The narrative is generated from the same numbers — it is
+ * a reading of the result, never an addition to it. */
+function updateCell(patient, params, result) {
+  // Receptor occupancy is the quantity the picture is really about, so compute
+  // it the same way the engine does rather than eyeballing a proportion.
+  const sensitised = sensitizedReceptors(
+    patient.specific_ige_ku, patient.total_ige_ku,
+    params.receptors_per_cell, params.k_occupancy_ku);
+  const sensitisedFraction = sensitised / params.receptors_per_cell;
+  // Two receptors per crosslink.
+  const crosslinkedFraction = sensitised > 0
+    ? Math.min(1, (result.crosslinks_per_cell * 2) / sensitised) : 0;
+
+  if (cellView) {
+    cellView.update({
+      sensitised: sensitisedFraction,
+      crosslinked: crosslinkedFraction,
+      activation: result.activation,
+      // Scale the allergen cloud against the crosslinking optimum, so the field
+      // thickens across exactly the range that matters biologically.
+      allergen: Math.min(1, Math.sqrt(result.free_allergen_m / 1.7e-8)),
+      reaction: result.reaction,
+    });
+  }
+
+  const big = $('cell-big');
+  if (big) {
+    big.textContent = Math.round(result.crosslinks_per_cell).toLocaleString('en-US');
+    big.style.color = result.crosslinks_per_cell >= params.crosslink_threshold
+      ? 'var(--gl-cross)' : 'var(--ink-2)';
+  }
+
+  const narrative = $('cell-narrative');
+  if (!narrative) return;
+  const pct = v => (v * 100).toFixed(v < 0.01 ? 2 : v < 0.1 ? 1 : 0) + '%';
+  let story;
+  if (sensitisedFraction < 1e-4) {
+    story = 'כמעט אף קולטן לא נושא נוגדן שמזהה חלב. אין למה להיקשר, ולכן אין תגובה בשום מינון.';
+  } else if (result.crosslinks_per_cell < 1) {
+    story = `<b>${pct(sensitisedFraction)}</b> מהקולטנים נושאים IgE לחלב, אבל כמעט שום אלרגן לא מגיע — `
+      + 'אף קולטן לא מגושר, והתא שקט.';
+  } else if (!result.reaction) {
+    story = `<b>${pct(sensitisedFraction)}</b> מהקולטנים חמושים ב-IgE לחלב, `
+      + `ואלרגן גישר <b>${Math.round(result.crosslinks_per_cell)}</b> מהם. `
+      + `זה מתחת לסף של ${params.crosslink_threshold} שדרוש כדי להפעיל את התא — `
+      + 'משהו קורה, אבל לא מספיק כדי להרגיש.';
+  } else if (result.systemic_score > result.local_score) {
+    story = `אלרגן גישר <b>${Math.round(result.crosslinks_per_cell)}</b> זוגות קולטנים — `
+      + `הרבה מעל הסף. <b>${pct(result.activation)}</b> מהתאים משחררים את תכולתם, `
+      + `ההיסטמין בפלזמה מגיע ל-<b>${result.peak_histamine.toFixed(1)} ng/mL</b>, `
+      + 'וזו כבר תגובה מערכתית — לא רק מקומית.';
+  } else {
+    story = `אלרגן גישר <b>${Math.round(result.crosslinks_per_cell)}</b> זוגות קולטנים, `
+      + `<b>${pct(result.activation)}</b> מהתאים מדגרנלים. `
+      + 'הכמות שנספגה קטנה מדי לתגובה מערכתית, אבל מספיקה לסימפטומים מקומיים במעי.';
+  }
+  narrative.innerHTML = story;
+}
+
+let pending = 0;
+function schedule() {
+  if (pending) return;
+  pending = requestAnimationFrame(() => { pending = 0; recompute(); });
+}
+
+/* ---------------- agent army ---------------- */
+
+const STAGE_HE = {
+  design: 'החוקר הראשי מתכנן פרוטוקולים',
+  simulate: 'המנוע מריץ את הפרוטוקולים',
+  review: 'המומחים קוראים את הפלט',
+  judge: 'המבקר מדרג',
+  optimise: 'המנוע מכייל את המינונים של המוביל',
+};
+
+let stream = null;
+
+function stepEl(key, label, detail, stateName) {
+  let el = document.querySelector(`.step[data-key="${key}"]`);
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'step'; el.dataset.key = key;
+    el.innerHTML = '<span class="dot"></span><div><div class="label"></div><div class="detail"></div></div>';
+    $('timeline').appendChild(el);
+  }
+  el.dataset.state = stateName;
+  el.querySelector('.label').textContent = label;
+  if (detail !== null) el.querySelector('.detail').textContent = detail;
+  return el;
+}
+
+function runAgents() {
+  if (stream) stream.close();
+  $('timeline').innerHTML = '';
+  $('agent-error').innerHTML = '';
+  $('agent-reviews').innerHTML = '';
+  $('agent-verdict').innerHTML = '';
+  $('agent-optimised').innerHTML = '';
+  $('agent-results').hidden = true;
+  $('run-agents').disabled = true;
+  $('stop-agents').disabled = false;
+
+  const query = new URLSearchParams({
+    goal: $('goal').value.trim(),
+    count: $('count').value,
+    offline: $('offline').checked ? '1' : '0',
+    pi: $('pi-model').value,
+    review: $('review-model').value,
+    judge: $('judge-model').value,
+    patient: JSON.stringify(state.patient),
+  });
+
+  stream = new EventSource('/api/lab/stream?' + query);
+  const on = (name, fn) => stream.addEventListener(name, e => fn(JSON.parse(e.data)));
+
+  on('design', d => stepEl('design', STAGE_HE.design,
+    d.offline ? 'offline — פאנל מובנה' : d.model, 'run'));
+
+  on('designed', d => {
+    stepEl('design', STAGE_HE.design,
+      d.protocols.map(p => p.label).join(' · '), 'done');
+    d.notes.forEach((note, i) => stepEl('note' + i, 'הערה', note, 'fail'));
+  });
+
+  on('simulate', d => stepEl('simulate', STAGE_HE.simulate, `${d.count} פרוטוקולים`, 'run'));
+
+  on('simulated', d => {
+    stepEl('simulate', STAGE_HE.simulate, `${d.outcomes.length} הורצו במנוע`, 'done');
+    const rows = d.outcomes.slice().sort((a, b) => num(b.fold_shift) - num(a.fold_shift));
+    $('agent-protocols').tBodies[0].innerHTML = rows.map(o =>
+      `<tr><td>${o.label}</td><td class="n" style="font-size:.72rem">${o.steps.join('<br>')}</td>` +
+      `<td class="n">${fmtMg(o.eliciting_dose_after_mg)} מ״ג</td>` +
+      `<td class="n">${isFinite(num(o.fold_shift)) ? num(o.fold_shift).toFixed(0) + '×' : '∞'}</td>` +
+      `<td>${o.protects_against_a_glass
+        ? '<span class="badge b-safe">כן</span>' : '<span class="badge b-danger">לא</span>'}</td></tr>`
+    ).join('');
+    $('agent-results').hidden = false;
+  });
+
+  on('review', d => stepEl('review', STAGE_HE.review, d.model, 'run'));
+
+  on('reviewed', d => {
+    const ROLE_HE = { immunologist: 'אימונולוג', pharmacologist: 'פרמקולוג',
+                      toxicologist: 'טוקסיקולוג' };
+    const guard = d.untraceable.length
+      ? `<span class="badge b-danger">${d.untraceable.length} מספרים לא ניתנים לייחוס: ${d.untraceable.join(', ')}</span>`
+      : '<span class="badge b-safe">כל המספרים מיוחסים לפלט המנוע</span>';
+    const box = document.createElement('div');
+    box.className = 'review';
+    box.innerHTML =
+      `<div class="who"><strong>${ROLE_HE[d.role] || d.role}</strong>` +
+      `<span class="via">${d.model}</span></div>` +
+      `<div class="text"></div><div class="guard">${guard}</div>`;
+    box.querySelector('.text').textContent = d.text;
+    $('agent-reviews').appendChild(box);
+    stepEl('review', STAGE_HE.review,
+      `${$('agent-reviews').children.length}/3 חוות דעת`, 'run');
+  });
+
+  on('judge', d => {
+    stepEl('review', STAGE_HE.review, `${$('agent-reviews').children.length}/3 חוות דעת`, 'done');
+    stepEl('judge', STAGE_HE.judge, d.model, 'run');
+  });
+
+  on('judged', d => {
+    stepEl('judge', STAGE_HE.judge, null, 'done');
+    if (!d.text) return;
+    const guard = d.untraceable.length
+      ? `<span class="badge b-danger">${d.untraceable.length} מספרים לא ניתנים לייחוס</span>`
+      : '<span class="badge b-safe">כל המספרים מיוחסים לפלט המנוע</span>';
+    const box = document.createElement('div');
+    box.className = 'card';
+    box.innerHTML = '<h2>פסק המבקר</h2><div class="verdict-box"><div class="text"></div></div>' +
+                    `<div class="guard" style="margin-top:.6rem">${guard}</div>`;
+    box.querySelector('.text').textContent = d.text;
+    $('agent-verdict').appendChild(box);
+  });
+
+  on('optimise', d => stepEl('optimise', STAGE_HE.optimise,
+    `${d.protocol} — ${d.steps.join(', ')}`, 'run'));
+
+  on('optimised', d => {
+    if (d.error) {
+      stepEl('optimise', STAGE_HE.optimise, d.error, 'fail');
+      return;
+    }
+    stepEl('optimise', STAGE_HE.optimise,
+      `נבדקו ${d.evaluations} הגדרות · ${d.rejected_unsafe} נפסלו כלא בטוחות`, 'done');
+    renderOptimisation(d);
+  });
+
+  on('done', d => {
+    stepEl('done', 'הסתיים', `${d.usage}${d.best ? ' · מוביל: ' + d.best : ''}`, 'done');
+    finishAgents();
+  });
+
+  on('error', d => {
+    $('agent-error').innerHTML = `<div class="err">${d.message}</div>`;
+    finishAgents();
+  });
+
+  stream.onerror = () => {
+    // EventSource fires this both on a network failure and on a clean server
+    // close, so only surface it when nothing arrived at all.
+    if (!$('timeline').children.length) {
+      $('agent-error').innerHTML = '<div class="err">החיבור לשרת נכשל. השרת עדיין רץ?</div>';
+    }
+    finishAgents();
+  };
+}
+
+/** Load a protocol the agents produced straight onto the bench, so a result can
+ *  be taken apart by hand instead of only read. */
+function applyStepsToBench(steps) {
+  for (const lever of LEVER_UI) state.levers[lever.kind].on = false;
+  for (const step of steps) {
+    if (!state.levers[step.kind]) continue;
+    Object.assign(state.levers[step.kind], step.params, { on: true });
+  }
+  $('levers').innerHTML = '';
+  buildLevers();
+  recompute();
+  showTab('bench');
+  toast('הפרוטוקול נטען לשולחן העבודה');
+}
+
+function renderOptimisation(d) {
+  const host = $('agent-optimised');
+  const fold = v => (isFinite(num(v)) ? num(v).toFixed(0) + '×' : '∞');
+  const safe = d.safe_start
+    ? '<span class="badge b-safe">בטוח להתחיל</span>'
+    : '<span class="badge b-danger">מגיב כבר במנה הראשונה</span>';
+
+  host.innerHTML =
+    '<div class="card"><h2>כיול המנוע</h2>' +
+    '<p class="hint">הסוכנים בחרו אילו מנגנונים לשלב. את המינונים המנוע מחפש בעצמו — ' +
+    'בכפוף לאילוץ שהמומחים העלו בכל ריצה: מנת הפתיחה חייבת להיות מתחת לסף של המטופל.</p>' +
+    `<div class="shift">
+       <div class="side"><span class="k">כפי שהוצע</span>
+         <span class="v">${fmtMg(d.before.eliciting_dose_after_mg)}</span>
+         <span class="sub">${fold(d.before.fold_shift)} · ${d.steps_before ?? ''}</span></div>
+       <div class="arrow">←<small>${d.evaluations} הגדרות נבדקו</small></div>
+       <div class="side"><span class="k">אחרי כיול</span>
+         <span class="v" style="color:var(--accent)">${fmtMg(d.after.eliciting_dose_after_mg)}</span>
+         <span class="sub">${fold(d.after.fold_shift)}</span></div>
+     </div>` +
+    `<p style="font-size:.85rem;margin-bottom:.7rem">${safe} ` +
+    `<span style="color:var(--ink-2)">${d.steps.map(describeStep).join(' · ')}</span></p>` +
+    (d.notes?.length
+      ? `<div class="note" style="margin-bottom:.8rem">${d.notes.map(n => '· ' + n).join('<br>')}</div>`
+      : '') +
+    '<button class="btn" id="apply-optimised">טען לשולחן העבודה</button></div>';
+
+  $('apply-optimised').onclick = () => applyStepsToBench(d.steps);
+}
+
+function finishAgents() {
+  if (stream) { stream.close(); stream = null; }
+  $('run-agents').disabled = false;
+  $('stop-agents').disabled = true;
+}
+
+/* ---------------- experiment log ---------------- */
+
+async function refreshLog() {
+  const entries = await api('/api/log');
+  $('log-count').textContent = entries.length ? `${entries.length} ריצות` : '';
+  const body = $('log-table').tBodies[0];
+  if (!entries.length) {
+    body.innerHTML = '<tr><td colspan="7" class="empty">עוד לא שמרת ריצות. ' +
+      'הרץ משהו בשולחן העבודה ולחץ «שמור ליומן».</td></tr>';
+    return;
+  }
+  body.innerHTML = entries.slice().reverse().map((e, i) => {
+    const r = e.result || {};
+    const when = e.saved_at ? new Date(e.saved_at).toLocaleString('he-IL') : '—';
+    const fold = num(r.fold_shift);
+    return `<tr><td class="n" style="font-size:.72rem">${when}</td>` +
+      `<td>${(e.note || '').slice(0, 60) || '—'}</td>` +
+      `<td class="n" style="font-size:.72rem">sIgE ${(e.patient?.specific_ige_ku ?? 0).toFixed(1)}<br>` +
+      `barrier ${(e.patient?.mucosal_barrier ?? 1).toFixed(2)}×</td>` +
+      `<td style="font-size:.72rem">${(e.steps || []).map(describeStep).join('<br>') || 'ללא'}</td>` +
+      `<td class="n">${fmtMg(r.eliciting_dose_after_mg)} מ״ג</td>` +
+      `<td class="n">${isFinite(fold) ? fold.toFixed(0) + '×' : '∞'}</td>` +
+      `<td><button class="btn quiet" data-load="${i}" style="font-size:.72rem;padding:.25rem .55rem">טען</button></td></tr>`;
+  }).join('');
+
+  const reversed = entries.slice().reverse();
+  body.querySelectorAll('button[data-load]').forEach(btn => {
+    btn.onclick = () => {
+      const entry = reversed[+btn.dataset.load];
+      if (entry?.patient) Object.assign(state.patient, entry.patient);
+      for (const lever of LEVER_UI) state.levers[lever.kind].on = false;
+      for (const step of entry?.steps || []) {
+        if (!state.levers[step.kind]) continue;
+        Object.assign(state.levers[step.kind], step.params, { on: true });
+      }
+      $('levers').innerHTML = '';
+      buildLevers();
+      clearChips(); syncPatient(); recompute();
+      showTab('bench');
+      toast('הריצה נטענה לשולחן העבודה');
+    };
+  });
+}
+
+async function saveExperiment() {
+  if (!lastResult) return;
+  const note = ($('save-hint').dataset.note || '').trim();
+  await api('/api/log/save', {
+    saved_at: new Date().toISOString(),
+    note: note || `${PRESET_HE[state.preset] || 'מותאם'} · ${fmtMg(state.dose)} מ״ג`,
+    patient: state.patient,
+    steps: activeSteps(),
+    result: {
+      eliciting_dose_before_mg: lastResult.eliciting_dose_before_mg,
+      eliciting_dose_after_mg: isFinite(lastResult.eliciting_dose_after_mg)
+        ? lastResult.eliciting_dose_after_mg : 'Infinity',
+      fold_shift: isFinite(lastResult.fold_shift) ? lastResult.fold_shift : 'Infinity',
+      dose_mg: lastResult.dose_mg,
+      symptom_score: lastResult.challenge.symptom_score,
+      peak_histamine: lastResult.challenge.peak_histamine,
+      reaction: lastResult.challenge.reaction,
+    },
+  });
+  toast('נשמר ליומן');
+  refreshLog();
+}
+
+/* ---------------- parameters ---------------- */
+
+let PROVENANCE = [];
+const BADGE = { measured: 'b-hema', calibrated: 'b-caution',
+                assumed: 'b-eosin', derived: 'b-safe' };
+
+function renderParams() {
+  const q = $('param-filter').value.trim().toLowerCase();
+  const rows = PROVENANCE
+    .filter(p => !q || `${p.name} ${p.provenance} ${p.source} ${p.note}`.toLowerCase().includes(q))
+    .sort((a, b) => a.provenance.localeCompare(b.provenance) || a.name.localeCompare(b.name));
+  const body = $('params-table').tBodies[0];
+  body.innerHTML = rows.length ? rows.map(p =>
+    `<tr><td class="n">${p.name}</td>` +
+    `<td class="n">${Math.abs(p.value) < 0.001 || Math.abs(p.value) >= 1e5
+      ? p.value.toExponential(3) : p.value}</td>` +
+    `<td class="n">${p.unit}</td>` +
+    `<td><span class="badge ${BADGE[p.provenance] || 'b-hema'}">${p.provenance}</span></td>` +
+    `<td class="src">${p.source}</td>` +
+    `<td class="src" style="max-width:26rem">${p.note || ''}</td></tr>`).join('')
+    : '<tr><td colspan="6" class="empty">אין התאמות</td></tr>';
+}
+
+/* ---------------- tabs ---------------- */
+
+const TABS = ['bench', 'agents', 'log', 'params'];
+
+function showTab(name) {
+  document.querySelectorAll('#nav button').forEach(b =>
+    b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+  // Only touch panels that are still in the document: the standalone build
+  // removes the two that need a server.
+  TABS.forEach(t => {
+    const panel = $('panel-' + t);
+    if (panel) panel.hidden = t !== name;
+  });
+  if (name === 'bench') schedule();
+  if (name === 'log') refreshLog();
+  location.hash = name;
+}
+
+/* ---------------- boot ---------------- */
+
+const MODEL_CHOICES = [
+  ['claude-fable-5', 'Claude Fable 5 — החזק ביותר'],
+  ['claude-opus-4-8', 'Claude Opus 4.8'],
+  ['claude-sonnet-5', 'Claude Sonnet 5'],
+  ['gpt-5-6-sol', 'GPT-5.6 Sol'],
+  ['gpt-5-6-luna', 'GPT-5.6 Luna — זול ומהיר'],
+  ['grok-4-5', 'Grok 4.5'],
+  ['grok-4-3', 'Grok 4.3 — הזול ביותר'],
+  ['gemini-3.1-pro', 'Gemini 3.1 Pro'],
+  ['gemini-3-5-flash', 'Gemini 3.5 Flash'],
+];
+
+async function boot() {
+  restore();
+  buildChips();
+  buildLevers();
+  syncPatient();
+  $('dose').value = fromLog(state.dose, ...DOSE);
+  labelDose();
+
+  $('sige').oninput = e => { state.patient.specific_ige_ku = toLog(+e.target.value, ...SIGE); clearChips(); labelPatient(); schedule(); };
+  $('tige').oninput = e => { state.patient.total_ige_ku = toLog(+e.target.value, ...TIGE); clearChips(); labelPatient(); schedule(); };
+  $('barrier').oninput = e => { state.patient.mucosal_barrier = toLog(+e.target.value, ...BARRIER); clearChips(); labelPatient(); schedule(); };
+  $('dose').oninput = e => { state.dose = toLog(+e.target.value, ...DOSE); labelDose(); schedule(); };
+
+  MODEL_CHOICES.forEach(([value, label]) => {
+    for (const [id, preferred] of [['pi-model', 'claude-fable-5'],
+                                   ['review-model', 'gpt-5-6-luna'],
+                                   ['judge-model', 'claude-opus-4-8']]) {
+      const option = document.createElement('option');
+      option.value = value; option.textContent = label;
+      option.selected = value === preferred;
+      $(id).appendChild(option);
+    }
+  });
+
+  $('count').oninput = e => { $('count-v').textContent = e.target.value; };
+  $('run-agents').onclick = runAgents;
+  $('stop-agents').onclick = () => { finishAgents(); toast('הריצה נעצרה'); };
+  $('save-exp').onclick = saveExperiment;
+  $('refresh-log').onclick = refreshLog;
+  $('clear-log').onclick = async () => {
+    await api('/api/log/clear', {});
+    toast('היומן נמחק'); refreshLog();
+  };
+  $('param-filter').oninput = renderParams;
+
+  document.querySelectorAll('#nav button').forEach(b => {
+    b.onclick = () => showTab(b.dataset.tab);
+  });
+
+  const cellCanvas = $('cell-canvas');
+  if (cellCanvas) {
+    cellView = createCellView(cellCanvas, { palette: glPalette() });
+    if (!cellView) {
+      // No WebGL. The bench is still fully usable — say so plainly instead of
+      // leaving a dead rectangle on the page.
+      cellCanvas.replaceWith(Object.assign(document.createElement('div'), {
+        className: 'cell-fallback',
+        textContent: 'הדפדפן הזה לא תומך ב-WebGL, אז תצוגת התא התלת־ממדית כבויה. '
+          + 'כל שאר המעבדה עובדת רגיל.',
+      }));
+    }
+  }
+
+  bindDoseHover();
+
+  // A window resize is not the only thing that changes a chart's width: showing
+  // a tab, the column layout collapsing, a panel appearing. Observe the elements
+  // themselves and repaint from cache — no engine work, so it stays smooth.
+  if (typeof ResizeObserver === 'function') {
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => { frame = 0; drawCurves(); });
+    });
+    for (const id of ['chart-hist', 'chart-dose']) {
+      const canvas = $(id);
+      if (canvas) observer.observe(canvas);
+    }
+  } else {
+    window.addEventListener('resize', schedule);
+  }
+
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  const onTheme = () => { cellView?.setPalette(glPalette()); schedule(); };
+  (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(onTheme);
+
+  recompute();
+
+  // The standalone build has no server behind it, so the two tabs that need one
+  // are removed rather than left to fail when clicked.
+  const standalone = Boolean(globalThis.__STANDALONE__);
+  if (standalone) {
+    for (const tab of ['agents', 'log']) {
+      document.querySelector(`#nav button[data-tab="${tab}"]`)?.remove();
+      $('panel-' + tab)?.remove();
+    }
+    $('status').innerHTML =
+      `<span class="pill on">מנוע · ${Object.keys(PARAMS).length} פרמטרים</span>`
+      + '<span class="pill">גרסה עצמאית — בלי צבא הסוכנים</span>';
+  }
+
+  // Status and the citation table come from the server — the browser engine
+  // carries the numbers but not their provenance.
+  try {
+    if (standalone) throw new Error('standalone');
+    const health = await api('/api/health');
+    // Report the provider the offered models actually use. An OpenRouter-only
+    // setup would otherwise show "connected" while every call in the panel fails.
+    const ready = health.default_models_reachable;
+    const fleetLabel = ready ? 'צבא הסוכנים מחובר'
+      : health.providers.openrouter ? 'יש רק מפתח OpenRouter — המודלים כאן דורשים KIE'
+      : 'אין מפתח API — סוכנים offline';
+    $('status').innerHTML =
+      `<span class="pill on">מנוע · ${health.parameters} פרמטרים</span>` +
+      `<span class="pill ${ready ? 'on' : 'off'}">${fleetLabel}</span>` +
+      `<span class="pill">חוזק מקורות ${Math.round(health.trust * 100)}%</span>`;
+    if (!ready) $('offline').checked = true;
+  } catch {
+    if (!standalone) $('status').innerHTML = '<span class="pill off">אין חיבור לשרת</span>';
+  }
+
+  // The standalone build bakes the citation table in, because it has no server
+  // to ask. Either way the bench works — only the parameters tab needs this.
+  if (Array.isArray(globalThis.__PROVENANCE__)) {
+    PROVENANCE = globalThis.__PROVENANCE__;
+    renderParams();
+  } else {
+    try {
+      PROVENANCE = await api('/api/params');
+      renderParams();
+    } catch { /* the bench works without the citation table */ }
+  }
+
+  const initial = location.hash.slice(1);
+  showTab(TABS.includes(initial) && $('panel-' + initial) ? initial : 'bench');
+
+  // Every highlighted element except the nav buttons lives on the bench, and a
+  // hidden panel has no position to point at — so make sure it is showing.
+  const runTour = () => startTour({
+    onStep: step => {
+      if (step.target && !step.target.startsWith('#nav')) showTab('bench');
+    },
+  });
+  $('help').onclick = runTour;
+  if (!tourWasSeen()) setTimeout(runTour, 700);
+}
+
+/* A front end that fails during start-up paints a page that looks merely empty,
+ * and says why only in a console nobody has open. Say it on the page. */
+function reportBootFailure(error) {
+  const message = (error && (error.stack || error.message)) || String(error);
+  const banner = document.createElement('div');
+  banner.className = 'err';
+  banner.style.margin = '1rem';
+  banner.innerHTML = '<strong>המעבדה לא הצליחה לעלות.</strong><br>'
+    + '<span style="font-family:var(--f-mono);font-size:.78rem;white-space:pre-wrap"></span>';
+  banner.querySelector('span').textContent = message;
+  document.body.prepend(banner);
+  const status = document.getElementById('status');
+  if (status) status.innerHTML = '<span class="pill off">שגיאת טעינה</span>';
+  console.error('Tikkun Lab failed to boot:', error);
+}
+
+window.addEventListener('error', e => reportBootFailure(e.error || e.message));
+window.addEventListener('unhandledrejection', e => reportBootFailure(e.reason));
+
+try {
+  await boot();
+} catch (error) {
+  reportBootFailure(error);
+}
+
+</script>
