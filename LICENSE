@@ -19,14 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-NOT MEDICAL SOFTWARE.
-
-This project is a research and teaching simulation. It is not a medical device,
-it has not been clinically validated, and it must not be used to make or inform
-any decision about the care of a real person. Eliciting doses it reports are
-simulated values, and several of its parameters were fitted rather than
-measured. See docs and the in-app parameter table for the provenance of every
-number.

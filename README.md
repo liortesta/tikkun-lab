@@ -38,7 +38,7 @@ An agent cannot return "histamine fell to 3 ng/mL". It can only return
 - **People building LLM-agent systems for science.** The interesting part is not the biology — it is the enforced separation between a model's judgement and a simulator's arithmetic, and a guard that catches fabricated numbers. That pattern transfers to any domain.
 - **Anyone curious about food allergy.** Open the lab, drag the dose slider, and watch why a trace of milk can floor one child while another drinks a glass.
 
-**Who this is not for:** clinicians making decisions about real patients. See [LICENSE](LICENSE).
+**Who this is not for:** anyone making a decision about a real person's care. This is not a medical device and has never been clinically validated — read [DISCLAIMER.md](DISCLAIMER.md) before you do anything else with it.
 
 ### Run it
 
@@ -198,7 +198,7 @@ Built by [Lior Testa](https://github.com/liortesta). MIT licensed — fork it, b
 - **מי שבונה מערכות סוכני LLM למדע.** החלק המעניין הוא לא הביולוגיה — אלא ההפרדה הנאכפת בין שיפוטיות של מודל לבין אריתמטיקה של סימולטור, ושומר שתופס מספרים מומצאים. התבנית עוברת לכל תחום.
 - **כל מי שסקרן לגבי אלרגיה למזון.** פתח את המעבדה, גרור את סליידר המינון, וראה למה שריד של חלב מפיל ילד אחד בזמן שאחר שותה כוס.
 
-**למי זה לא מתאים:** רופאים שמקבלים החלטות על מטופלים אמיתיים. ראה [LICENSE](LICENSE).
+**למי זה לא מתאים:** לכל מי שמקבל החלטה על טיפול באדם אמיתי. זה לא מכשיר רפואי והוא מעולם לא עבר ולידציה קלינית — קרא את [DISCLAIMER.md](DISCLAIMER.md) לפני כל דבר אחר.
 
 ### הרצה
 
