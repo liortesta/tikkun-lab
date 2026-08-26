@@ -77,6 +77,32 @@ FORBIDDEN_ALLOW = re.compile(r"\.env\.(example|sample|template|dist)$", re.IGNOR
 MAX_BLOB = 2_000_000     # a 2 MB text file is already pathological
 FALSE_HEX = re.compile(r"^(0+|f+|[0-9]+|(deadbeef|abcdef|cafebabe|0123456789)[a-f0-9]*)$", re.I)
 
+# "Put your own value here" and "read it from somewhere else". A scanner that
+# reports these trains you to skim its output, which is exactly when a real key
+# slips past.
+PLACEHOLDER = re.compile(
+    r"(?i)\byour[-_ ]?\w*[-_ ]?(key|token|secret|password|id|here)\b"
+    r"|<[^>]{2,40}>"
+    r"|\b(xxx+|yyy+|abc123|changeme|placeholder|example|sample|dummy|redacted|"
+    r"insert|replace|todo|fixme|test[-_]?key|fake)\b"
+    r"|\.\.\.")
+REFERENCE = re.compile(
+    r"\$\{[^}]+\}|\$[A-Z_][A-Z0-9_]*|%[A-Z_]+%|os\.(environ|getenv)|"
+    r"process\.env|System\.getenv|secrets\.|vars\.")
+
+# A 32-character hex string is a secret only sometimes; far more often it is a
+# content hash, an ETag, a commit id or a generated row id. Suppress it where the
+# surrounding words say so, and in file types that are output rather than source.
+HASH_CONTEXT = re.compile(
+    r"(?i)\b(sha1|sha256|sha512|md5|hash|digest|etag|checksum|integrity|"
+    r"fingerprint|commit|revision|uuid|guid|nonce|salt|cache[-_]?key|"
+    r"content[-_]?hash|bundle|chunk|asset|build[-_]?id|trace[-_]?id|"
+    r"request[-_]?id|session[-_]?id|correlation)\b")
+HASHY_FILE = re.compile(
+    r"\.(lock|lockb|sum|csv|tsv|html?|svg|map|snap|log|ndjson|jsonl)$"
+    r"|(^|/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|poetry\.lock|"
+    r"Cargo\.lock|composer\.lock|Gemfile\.lock|go\.sum)$", re.IGNORECASE)
+
 
 @dataclass
 class Finding:
@@ -127,19 +153,23 @@ def run(args: list[str], cwd: str | None = None, timeout: int = 900) -> subproce
                           text=True, errors="replace")
 
 
-def scan_blob(text: str) -> list[tuple[str, str, str, int]]:
+def scan_blob(text: str, path: str = "") -> list[tuple[str, str, str, int]]:
     """Return (label, severity, prefix, length) for each credential in the text."""
     hits = []
+    hashy = bool(HASHY_FILE.search(path))
     for line in text.splitlines():
         if len(line) > 4000:
             continue  # minified bundle; matching inside it is noise
+        if PLACEHOLDER.search(line) or REFERENCE.search(line):
+            continue
         for label, pattern, severity in PATTERNS:
             match = pattern.search(line)
             if not match:
                 continue
             value = match.group(0)
-            if label == "bare 32-hex secret" and FALSE_HEX.match(value):
-                continue
+            if label == "bare 32-hex secret":
+                if FALSE_HEX.match(value) or hashy or HASH_CONTEXT.search(line):
+                    continue
             hits.append((label, severity, value[:4], len(value)))
             break  # one finding per line is enough to act on
     return hits
@@ -202,7 +232,7 @@ def scan_repo(name: str, public: bool, token: str, workdir: str,
             if content.returncode != 0 or len(content.stdout) > MAX_BLOB:
                 continue
             report.blobs += 1
-            for label, severity, prefix, length in scan_blob(content.stdout):
+            for label, severity, prefix, length in scan_blob(content.stdout, path):
                 finding = Finding(
                     repo=name, label=label, severity=severity, path=path,
                     prefix=prefix, length=length,
